@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Coda">
+<meta name="theme-color" content="#0E0F11">
+<title>Coda</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mitr:wght@500;600&family=IBM+Plex+Sans+Thai:wght@400;500;600&family=JetBrains+Mono:wght@700&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<style>
+:root{--bg:#0E0F11;--card:#1A1C20;--card2:#22252A;--line:#2A2D33;--fg:#F2F2F0;--mute:#9A9DA3;--dim:#5A5E66;--go:#F5C518;--goS:rgba(245,197,24,.12);--ink:#141210;--a:#3DDC97;--aS:rgba(61,220,151,.12);--b:#6CB4FF;--bS:rgba(108,180,255,.13);--x:#FF5C5C;--xS:rgba(255,92,92,.13);color-scheme:dark}
+*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--fg);font-family:'IBM Plex Sans Thai',system-ui,sans-serif;font-size:15px;-webkit-tap-highlight-color:transparent}
+button,input,select,textarea{font:inherit;color:inherit}button{border:0;background:none;cursor:pointer}button:disabled{opacity:.4;cursor:default}
+.wrap{max-width:460px;margin:0 auto;padding:16px 16px 180px;display:flex;flex-direction:column;gap:12px}
+.top{display:flex;align-items:center;gap:10px}.logo{display:flex;gap:8px;align-items:center;font-family:Mitr;font-weight:600;font-size:21px}
+.sub{font-size:12px;color:var(--mute)}.grow{flex:1;min-width:0}
+.tag{font-size:11px;padding:2px 8px;border-radius:999px;border:1px solid var(--line);color:var(--mute);white-space:nowrap}.tag.own{border-color:var(--go);color:var(--go)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px}
+.btn{min-height:50px;border-radius:14px;padding:0 16px;font-family:Mitr;font-weight:500;font-size:17px;display:flex;align-items:center;justify-content:center;width:100%;text-decoration:none}
+.go{background:var(--go);color:var(--ink);box-shadow:0 0 24px rgba(245,197,24,.25)}.line{border:1px solid var(--line);background:var(--card)}
+.sm{min-height:38px;font-size:14px;width:auto;padding:0 12px;border-radius:11px}
+input[type=password],input[type=text],input[type=date],textarea{width:100%;min-height:48px;border-radius:12px;background:var(--card);border:1px solid var(--line);padding:0 12px}
+textarea{padding:10px 12px;min-height:64px;resize:vertical}
+input.pin{font-family:'JetBrains Mono';font-size:28px;letter-spacing:.4em;text-align:center}
+.wk{display:flex;align-items:center;gap:8px}.wk .t{flex:1;text-align:center}.wk .t b{font-family:Mitr;font-weight:500;font-size:19px;display:block}
+.plan{display:flex;flex-direction:column;gap:6px}.plan .h{font-family:Mitr;font-weight:500;font-size:16px;line-height:1.35}
+.plan ul{margin:0;padding-left:18px;font-size:13px;color:var(--mute);line-height:1.55}
+.prog{height:6px;border-radius:9px;background:var(--line);overflow:hidden}.prog i{display:block;height:100%;background:var(--go)}
+.room{width:100%;display:flex;align-items:center;gap:12px;text-align:left;border-radius:16px;border:1px solid var(--line);background:var(--card);padding:12px 14px;min-height:72px}
+.room .d{width:46px;flex:none;text-align:center}.room .d b{display:block;font-family:Mitr;font-weight:500;font-size:16px}.room .d small{font-size:11px;color:var(--mute)}
+.room .r{font-family:Mitr;font-weight:500;font-size:20px}.room .s{font-size:12px;color:var(--mute)}
+.room .n{font-family:'JetBrains Mono';font-size:12px;text-align:right;line-height:1.5;white-space:nowrap}
+.room.todo{border-color:var(--go);background:linear-gradient(0deg,var(--goS),var(--goS)),var(--card)}.room.todo .s{color:var(--go)}
+.room.done{border-color:rgba(61,220,151,.45)}.room.done .s{color:var(--a)}
+.room.off,.room.wait{opacity:.55}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.stat{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:8px 10px}
+.stat .k{font-size:11px;color:var(--mute)}.stat .v{font-family:'JetBrains Mono';font-size:22px;font-weight:700}
+.chips{display:flex;gap:6px;overflow-x:auto}.chip{flex:none;min-height:36px;padding:0 12px;border-radius:999px;border:1px solid var(--line);background:var(--card);font-size:13px}.chip.on{background:var(--fg);color:var(--bg);font-weight:600}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.kid{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:8px;display:flex;flex-direction:column;gap:7px;min-width:0}
+.nm{display:flex;gap:6px;align-items:center;text-align:left;width:100%;min-height:34px}.nm span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500;font-size:14px}
+.no{font-family:'JetBrains Mono';font-size:10px;color:var(--dim)}.dot{width:9px;height:9px;border-radius:50%;flex:none;background:var(--a)}
+.ab{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--line);border-radius:9px;overflow:hidden}
+.ab button{min-height:32px;font-family:'JetBrains Mono';font-weight:700;font-size:13px;color:var(--dim)}
+.ab .onA{background:var(--aS);color:var(--a)}.ab .onB{background:var(--bS);color:var(--b)}
+.kid.B{border-color:rgba(108,180,255,.55)}.kid.B .dot{background:var(--b)}
+.kid.x{border-color:rgba(255,92,92,.55);background:var(--xS)}.kid.x .dot{background:var(--x)}.kid.x .nm span{text-decoration:line-through;color:var(--mute)}
+.xl{font-family:'JetBrains Mono';font-weight:700;font-size:12px;color:var(--x);min-height:32px;display:grid;place-items:center;border:1px solid rgba(255,92,92,.35);border-radius:9px}
+.hint{font-size:12px;color:var(--mute);line-height:1.5}.err{color:var(--x);font-size:14px;min-height:20px}
+.dock{position:fixed;left:0;right:0;bottom:0;padding:12px 16px calc(12px + env(safe-area-inset-bottom));background:rgba(14,15,17,.95);border-top:1px solid var(--line)}.dock .in{max-width:428px;margin:0 auto;display:flex;flex-direction:column;gap:8px}
+.tabs{display:grid;grid-template-columns:1fr 1fr;gap:6px}.tabs button{min-height:44px;border-radius:12px;border:1px solid var(--line);font-family:Mitr;font-weight:500}.tabs .on{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.ok{text-align:center;padding:20px 0}.ok h2{font-family:Mitr;font-weight:500;margin:6px 0}
+.trio{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.trio div{border:1px solid var(--line);border-radius:14px;padding:12px;background:var(--card)}.trio .v{font-family:'JetBrains Mono';font-size:28px;font-weight:700}
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:14px}
+table{border-collapse:collapse;width:100%;font-size:13px}th,td{padding:8px;border-bottom:1px solid var(--line);text-align:center;white-space:nowrap}
+th{font-weight:500;color:var(--mute);font-size:11px;background:var(--card2)}td:first-child,th:first-child{text-align:left;position:sticky;left:0;background:var(--card)}th:first-child{background:var(--card2)}
+td.A{color:var(--a);font-family:'JetBrains Mono';font-weight:700}td.B{color:var(--b);font-family:'JetBrains Mono';font-weight:700}td.X{color:var(--x)}
+.note{font-size:12px;color:var(--mute);border-left:2px solid var(--go);padding-left:8px;line-height:1.5}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<div class="dock" id="dock" hidden><div class="in" id="dockIn"></div></div>
+<script>
+var LOGO='<svg width="26" height="26" viewBox="0 0 26 26" fill="none" stroke="#F5C518" stroke-width="2"><circle cx="13" cy="13" r="7.5"/><path d="M13 1.5v23M1.5 13h23"/></svg>';
+var DAYS=['','จ.','อ.','พ.','พฤ.','ศ.','ส.','อา.'];
+var MON=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+var S={pin:'',me:null,w:1,wd:null,tab:'rooms',room:null,date:null,late:0,song:'',note:'',marks:{},hist:[],prev:null,busy:false};
+var $=function(id){return document.getElementById(id)};
+var each=function(sel,fn){Array.prototype.forEach.call(document.querySelectorAll(sel),fn)};
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+function dock(h){if(h){$('dockIn').innerHTML=h;$('dock').hidden=false}else $('dock').hidden=true}
+/* ---------- คุยกับระบบ: ใน Google ใช้ google.script.run / นอก Google (GitHub Pages) ใช้ fetch ไปที่ลิงก์ /exec ---------- */
+var API_URL='https://script.google.com/macros/s/AKfycby62UBWxk9uc-3WwAeoDvr-LuMht2lrfnxPD0vnm3TPJ6u06AcaFaSPtB0CoQWldHt0dw/exec';
+var HAS_GAS=!!(window.google&&google.script&&google.script.run);
+function rpc(fn,args){
+ if(HAS_GAS)return new Promise(function(ok,no){var r=google.script.run.withSuccessHandler(ok).withFailureHandler(no);r[fn].apply(r,args)});
+ return fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({fn:fn,args:args})})
+  .then(function(r){return r.json()}).then(function(j){if(!j.ok)throw new Error(j.e);return j.v})}
+function isNet(e){return /Failed to fetch|NetworkError|Load failed|network|timeout/i.test(e&&e.message||String(e))}
+function errText(e){return isNet(e)?'เน็ตหลุด ลองใหม่อีกครั้ง':(e&&e.message||String(e))}
+function call(fn,args,ok,fail){S.busy=true;rpc(fn,args).then(function(v){S.busy=false;ok(v)},function(e){S.busy=false;var m=$('err');var t=errText(e);if(m)m.textContent=t;else alert(t);if(fail)fail(e)})}
+/* ---------- จำไว้ในเครื่อง (เข้าแอปครั้งต่อไปขึ้นทันที) ---------- */
+function lsGet(k){try{return localStorage.getItem(k)}catch(e){return null}}
+function lsSet(k,v){try{if(v==null)localStorage.removeItem(k);else localStorage.setItem(k,v)}catch(e){}}
+function lsJSON(k){try{return JSON.parse(lsGet(k)||'null')}catch(e){return null}}
+function todayLocal(){var d=new Date();return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2)}
+/* ---------- คิวบันทึก: กดบันทึกแล้วไปต่อได้ทันที ส่งเบื้องหลัง เน็ตหลุดส่งซ้ำเอง ---------- */
+function qGet(){return lsJSON('coda_q')||[]}
+function qSet(q){lsSet('coda_q',q.length?JSON.stringify(q):null)}
+var flushing=false,flushTimer=null;
+function flush(){if(flushing)return;var q=qGet();updQ();if(!q.length)return;flushing=true;var it=q[0];
+ rpc('save',[it.pin,it.data]).then(function(v){var q2=qGet();q2.shift();qSet(q2);flushing=false;S.lastSent=v.at;updQ();flush()},
+  function(e){flushing=false;if(!isNet(e)){var q2=qGet();q2.shift();qSet(q2);alert('บันทึก ป.'+it.data.room+' ไม่สำเร็จ: '+errText(e)+'\nเปิดห้องนี้แล้วบันทึกใหม่อีกครั้ง')}
+   updQ();clearTimeout(flushTimer);flushTimer=setTimeout(flush,15000)})}
+function updQ(){var n=qGet().length;each('.qs',function(el){el.innerHTML=n?'<span style="color:var(--go)">⏳ กำลังส่งเข้าชีต '+n+' ห้อง…</span>':(S.lastSent?'<span style="color:var(--a)">✓ ส่งเข้าชีตแล้ว '+esc(S.lastSent.slice(-5))+'</span>':'')})}
+window.addEventListener('online',flush);
+
+/* ---------- วันที่ ---------- */
+function d2n(s){var p=s.split('-');return Date.UTC(+p[0],+p[1]-1,+p[2])/864e5}
+function n2d(n){var d=new Date(n*864e5);return d.getUTCFullYear()+'-'+('0'+(d.getUTCMonth()+1)).slice(-2)+'-'+('0'+d.getUTCDate()).slice(-2)}
+function thd(s){if(!s)return'';var p=s.split('-');return (+p[2])+' '+MON[+p[1]-1]}
+function dow(s){var d=new Date(d2n(s)*864e5).getUTCDay();return d===0?7:d}
+function weekOf(s){return Math.floor((d2n(s)-d2n(S.me.termStart))/7)+1}
+function roomDate(room,w){var t=S.me.timetable[room];return t&&t.day?n2d(d2n(S.me.termStart)+(w-1)*7+t.day-1):''}
+function offOf(room,date){if(!date)return null;var o=S.me.off.filter(function(o){return o.date===date&&(!o.rooms.length||o.rooms.indexOf(room)>=0)});return o[0]||null}
+function planOf(w){return S.me.plans.filter(function(p){return p.week===w})[0]||null}
+function clean(s){return String(s).replace(/^[-•\s]+/,'')}
+function sortedRooms(){var tt=S.me.timetable,k=function(r){var t=tt[r]||{};return (t.day||9)*100+(parseInt(t.period,10)||99)};return S.me.rooms.slice().sort(function(a,b){return k(a)-k(b)||a.localeCompare(b,"th",{numeric:true})})}
+function isOwner(){return S.me.role==='ครูหลัก'}
+
+/* ---------- PIN ---------- */
+function vPin(){dock(null);$('app').innerHTML='<div class="top"><div class="logo">'+LOGO+'Coda</div><span class="sub">จบคาบ จบงาน</span></div>'+
+ '<div class="card" style="display:flex;flex-direction:column;gap:12px"><div style="font-family:Mitr;font-size:18px">ใส่ PIN ของคุณครู</div>'+
+ '<input class="pin" id="pin" type="password" inputmode="numeric" maxlength="6" autocomplete="off"><div class="err" id="err"></div>'+
+ '<button class="btn go" id="enter">เข้าใช้งาน</button></div><div class="hint">PIN เป็นของคุณครูแต่ละท่าน ห้ามส่งต่อ · ครูเป้และครูแทนใช้ลิงก์เดียวกัน</div>';
+ $('enter').onclick=function(){S.pin=$('pin').value.trim();if(!S.pin||S.busy)return;$('enter').textContent='กำลังตรวจ…';
+  call('login',[S.pin],function(v){S.me=v;lsSet('coda_pin',S.pin);lsSet('coda_me',JSON.stringify(v));S.w=Math.max(1,v.thisWeek);loadWeek()},function(){$('enter').textContent='เข้าใช้งาน'})};
+ $('pin').onkeydown=function(e){if(e.key==='Enter')$('enter').click()};$('pin').focus()}
+
+/* เปิดสัปดาห์: ถ้ามีข้อมูลเก่าในเครื่องขึ้นทันที แล้วอัปเดตจากระบบเบื้องหลัง */
+function showWeek(){S.screen='week';S.tab==='sum'&&isOwner()?vSum():vHome()}
+function loadWeek(){var w=S.w,key='coda_wd_'+w,cached=lsJSON(key);
+ if(cached){S.wd=cached;mergeQueued();showWeek()}
+ else $('app').innerHTML='<div class="hint" style="padding:40px 0;text-align:center">กำลังโหลดสัปดาห์ที่ '+w+'…</div><div class="err" id="err"></div>';
+ rpc('week',[S.pin,w]).then(function(v){lsSet(key,JSON.stringify(v));if(S.w!==w)return;var same=cached&&JSON.stringify(cached)===JSON.stringify(v);
+   S.wd=v;mergeQueued();if(!same&&(S.screen==='week'||!cached))showWeek()},
+  function(e){if(!cached){var m=$('err');if(m)m.textContent=errText(e)}})}
+/* ห้องที่บันทึกแล้วแต่ยังส่งไม่ถึง ให้ขึ้นว่าบันทึกแล้วในหน้าห้องเรียน */
+function mergeQueued(){qGet().forEach(function(it){var d=it.data;if(d.date<S.wd.from||d.date>S.wd.to)return;S.wd.rooms[d.room]=it.sum})}
+
+/* ---------- ส่วนหัว + สัปดาห์ ---------- */
+function header(){var me=S.me;return '<div class="top"><div class="logo grow">'+LOGO+'Coda</div><span class="tag '+(isOwner()?'own':'')+'">'+esc(me.role)+'</span><span class="sub">'+esc(me.name)+'</span></div>'+
+ '<div class="card wk"><button class="btn line sm" id="wp"'+(S.w<=1?' disabled':'')+'>‹</button><div class="t"><b>สัปดาห์ที่ '+S.w+(S.w===me.thisWeek?' · นี้':'')+'</b><span class="sub">'+thd(S.wd.from)+' – '+thd(S.wd.to)+'</span></div><button class="btn line sm" id="wn"'+(S.w>=Math.max(me.thisWeek,1)+1?' disabled':'')+'>›</button></div><div class="qs sub" style="text-align:center;min-height:0"></div>'}
+function bindWeek(){$('wp').onclick=function(){if(S.w>1){S.w--;loadWeek()}};$('wn').onclick=function(){S.w++;loadWeek()}}
+function planCard(full){var p=planOf(S.w);if(!p)return '<div class="card hint">ยังไม่มีแผนของสัปดาห์นี้ในแผ่น "แผนรายสัปดาห์"</div>';
+ return '<div class="card plan"><div class="sub">แผนที่ '+p.week+' · '+esc(p.unit)+'</div><div class="h">'+esc(p.title)+'</div>'+
+ (full?'<ul>'+p.obj.map(function(o){return '<li>'+esc(clean(o))+'</li>'}).join('')+'</ul>':'')+'<div class="sub">ประเมินด้วย: '+esc(p.tool||'-')+'</div></div>'}
+function tabs(){return isOwner()?'<div class="tabs"><button id="tR" class="'+(S.tab==='rooms'?'on':'')+'">ห้องเรียน</button><button id="tS" class="'+(S.tab==='sum'?'on':'')+'">สรุปสัปดาห์</button></div>':''}
+function bindTabs(){if(!isOwner())return;$('tR').onclick=function(){S.tab='rooms';vHome()};$('tS').onclick=function(){S.tab='sum';vSum()}}
+
+/* ---------- หน้าห้องเรียน ---------- */
+function roomState(room){var date=roomDate(room,S.w),g=S.wd.rooms[room],off=offOf(room,date);
+ if(g)return{k:'done',date:g.date,g:g};if(off)return{k:'off',date:date,why:off.why};if(date&&date>S.me.today)return{k:'wait',date:date};return{k:'todo',date:date}}
+function vHome(){S.tab='rooms';var rooms=sortedRooms();var st=rooms.map(function(r){return roomState(r)});
+ var need=st.filter(function(s){return s.k!=='off'&&s.k!=='wait'}).length,done=st.filter(function(s){return s.k==='done'}).length;
+ var list=rooms.map(function(r,i){var s=st[i],t=S.me.timetable[r]||{},d=s.date;
+  var who=t.by?esc(t.by):'';var line,num='';
+  if(s.k==='done'){line='✓ บันทึกแล้ว · '+esc(s.g.by);num='<span style="color:var(--a)">A '+s.g.a+'</span><br><span style="color:var(--b)">B '+s.g.b+'</span>'+(s.g.x?'<br><span style="color:var(--x)">ขาด '+s.g.x+'</span>':'')}
+  else if(s.k==='off')line='งดสอน · '+esc(s.why);else if(s.k==='wait')line='ยังไม่ถึงวันสอน';else line='ยังไม่เช็คชื่อ';
+  return '<button class="room '+s.k+'" data-r="'+r+'"'+(s.k==='wait'?' disabled':'')+'><div class="d"><b>'+(d?DAYS[dow(d)]:'–')+'</b><small>'+thd(d)+'</small></div><div class="grow"><div class="r">ป.'+r+'</div><div class="s">'+line+(who&&isOwner()?' · <span style="color:var(--dim)">'+who+'</span>':'')+'</div></div><div class="n">'+num+'</div></button>'}).join('');
+ $('app').innerHTML=header()+planCard(false)+
+ '<div style="display:flex;justify-content:space-between" class="sub"><span>บันทึกแล้ว '+done+'/'+need+' ห้อง</span><span>'+(isOwner()?'ข้อมูลครูแทนเข้ามาที่นี่ทันที':'แตะห้องที่สอนแทน')+'</span></div><div class="prog"><i style="width:'+(need?Math.round(done/need*100):0)+'%"></i></div>'+
+ list+'<div class="err" id="err"></div>'+
+ '<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn line sm" id="rf">รีเฟรช</button>'+(S.me.sheetUrl?'<a class="btn line sm" href="'+esc(S.me.sheetUrl)+'" target="_blank">เปิด Google Sheet</a>':'')+'<button class="btn line sm" id="out">ออกจากระบบ</button></div>';
+ dock(tabs()||null);bindWeek();bindTabs();
+ $('rf').onclick=loadWeek;$('out').onclick=function(){if(qGet().length&&!confirm('ยังมีข้อมูลที่ส่งไม่ถึงชีต ออกตอนนี้ข้อมูลนั้นจะหาย ออกเลยไหม?'))return;
+  try{Object.keys(localStorage).filter(function(k){return k.indexOf('coda_')===0}).forEach(function(k){localStorage.removeItem(k)})}catch(e){}
+  S={pin:'',me:null,w:1,tab:'rooms',marks:{},hist:[]};vPin()};updQ();
+ each('.room',function(b){b.onclick=function(){var r=b.getAttribute('data-r'),s=roomState(r);openRoom(r,s.date&&s.date<=S.me.today?s.date:S.me.today)}})}
+
+/* ---------- เช็คชื่อ ---------- */
+function openRoom(r,date){S.room=r;S.date=date;S.marks={};S.late=0;S.song='';S.note='';S.hist=[];S.prev=null;S.screen='check';
+ // ยังส่งไม่ถึงชีต: ใช้ข้อมูลในคิวเลย
+ var qd=qGet().filter(function(it){return it.data.room===r&&it.data.date===date}).pop();
+ if(qd){var d=qd.data;d.students.forEach(function(s){if(s.m!=='A')S.marks[s.no]=s.m});S.late=d.late;S.song=d.song;S.note=d.note;S.prev={by:S.me.name,at:'รอส่ง'};vCheck();return}
+ // ห้องที่ยังไม่มีใครบันทึกในวันนั้น: เปิดทันที ไม่ต้องรอระบบ
+ var g=S.wd&&S.wd.rooms[r];if(!g||g.date!==date){vCheck();return}
+ $('app').innerHTML='<div class="hint" style="padding:40px 0;text-align:center">กำลังเปิด ป.'+r+'…</div><div class="err" id="err"></div>';dock(null);
+ call('load',[S.pin,r,date],function(v){if(v){S.marks=v.marks;S.late=Number(v.late)||0;S.song=v.song||'';S.note=v.note||'';S.prev={by:v.by,at:v.at}}vCheck()})}
+function count(){var L=S.me.roster[S.room],x=0,b=0;L.forEach(function(s){var m=S.marks[s.no];if(m==='x')x++;else if(m==='B')b++});return{n:L.length,p:L.length-x,a:L.length-x-b,b:b+x,x:x}}
+function snap(){S.hist.push(JSON.stringify({m:S.marks,l:S.late}));if(S.hist.length>40)S.hist.shift()}
+function vCheck(){var L=S.me.roster[S.room],c=count(),w=weekOf(S.date),p=planOf(w),off=offOf(S.room,S.date);
+ var kids=L.map(function(s){var m=S.marks[s.no]||'A';var lab=s.nick||s.name;
+  return '<div class="kid '+(m==='x'?'x':m==='B'?'B':'')+'"><button class="nm" data-k="'+s.no+'" title="'+esc(s.name)+'"><i class="dot"></i><span>'+esc(lab)+'</span><span class="no">'+s.no+'</span></button>'+
+  (m==='x'?'<div class="xl">ขาด · B</div>':'<div class="ab"><button class="'+(m==='B'?'':'onA')+'" data-l="'+s.no+'" data-v="A">A</button><button class="'+(m==='B'?'onB':'')+'" data-l="'+s.no+'" data-v="B">B</button></div>')+'</div>'}).join('');
+ var lates=[[0,'ตรงเวลา'],[5,'ช้า 5'],[10,'ช้า 10'],[15,'ช้า 15'],[20,'ช้า 20+']];
+ $('app').innerHTML='<div class="top"><button class="btn line sm" id="back">‹</button><div class="grow"><div style="font-family:Mitr;font-size:20px">ป.'+S.room+'</div><div class="sub" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">สัปดาห์ที่ '+w+(p?' · '+esc(p.title):'')+'</div></div><input type="date" id="d" value="'+S.date+'" max="'+S.me.today+'" style="width:150px;min-height:40px"></div>'+
+ (off?'<div class="note">วันนี้อยู่ในวันงดสอน: '+esc(off.why)+' — ถ้าสอนจริงก็บันทึกได้</div>':'')+
+ (S.prev?'<div class="note">บันทึกล่าสุดโดย '+esc(S.prev.by)+' · '+esc(S.prev.at)+' — กดบันทึกอีกครั้งจะแทนที่ของเดิม</div>':'')+
+ '<div class="stats"><div class="stat"><div class="k">มา</div><div class="v">'+c.p+'<span style="font-size:13px;color:var(--mute)">/'+c.n+'</span></div></div><div class="stat"><div class="k">ระดับ A</div><div class="v" style="color:var(--a)">'+c.a+'</div></div><div class="stat"><div class="k">ระดับ B</div><div class="v" style="color:var(--b)">'+c.b+'</div></div></div>'+
+ '<div class="chips">'+lates.map(function(l){return '<button class="chip '+(S.late===l[0]?'on':'')+'" data-t="'+l[0]+'">'+l[1]+'</button>'}).join('')+'</div>'+
+ '<div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn line sm" id="allin">ทุกคนมา</button><button class="btn line sm" id="allA">ทุกคน A</button><button class="btn line sm" id="undo"'+(S.hist.length?'':' disabled')+'>ย้อนกลับ</button></div>'+
+ '<div class="hint">แตะชื่อ = ขาด (แตะอีกครั้ง = มา) · กด B = ระดับรองลงมา · ไม่กด = A · คนขาดได้ B</div>'+
+ '<div class="grid">'+kids+'</div>'+
+ '<label class="hint" for="song">เพลง / หัวข้อที่สอน</label><input type="text" id="song" maxlength="80" placeholder="'+esc(p?p.title:'เช่น ร้องเพลงช้างน้อย')+'" value="'+esc(S.song)+'">'+
+ '<label class="hint" for="note">ปัญหา / หมายเหตุ (ไม่มีก็เว้นว่าง)</label><textarea id="note" maxlength="300" placeholder="เช่น เด็กเลขที่ 5 ไม่ยอมร้อง / โปรเจกเตอร์เสีย">'+esc(S.note)+'</textarea>'+
+ '<div class="err" id="err"></div>';
+ dock('<button class="btn go" id="save">บันทึก ป.'+S.room+' · '+thd(S.date)+'</button>');
+ $('back').onclick=function(){loadWeek()};$('song').oninput=function(){S.song=this.value};$('note').oninput=function(){S.note=this.value};
+ $('d').onchange=function(){if(this.value&&this.value<=S.me.today)openRoom(S.room,this.value)};
+ $('allin').onclick=function(){snap();Object.keys(S.marks).forEach(function(k){if(S.marks[k]==='x')delete S.marks[k]});vCheck()};
+ $('allA').onclick=function(){snap();Object.keys(S.marks).forEach(function(k){if(S.marks[k]==='B')delete S.marks[k]});vCheck()};
+ $('undo').onclick=function(){if(!S.hist.length)return;var h=JSON.parse(S.hist.pop());S.marks=h.m;S.late=h.l;vCheck()};
+ each('[data-k]',function(b){b.onclick=function(){var k=b.getAttribute('data-k');snap();if(S.marks[k]==='x')delete S.marks[k];else S.marks[k]='x';vCheck()}});
+ each('[data-l]',function(b){b.onclick=function(){var k=b.getAttribute('data-l');snap();if(b.getAttribute('data-v')==='B')S.marks[k]='B';else delete S.marks[k];vCheck()}});
+ each('[data-t]',function(b){b.onclick=function(){snap();S.late=Number(b.getAttribute('data-t'));vCheck()}});
+ $('save').onclick=function(){
+  var st=L.map(function(s){return{no:s.no,name:s.name,nick:s.nick,m:S.marks[s.no]||'A'}});
+  var data={room:S.room,date:S.date,late:S.late,song:S.song,note:S.note,students:st},c2=count();
+  var d=new Date(),at=todayLocal()+' '+('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2),wk=weekOf(S.date);
+  // สรุปห้องนี้ไว้ขึ้นหน้าห้องเรียนทันที (ก่อนส่งถึงชีต)
+  var sum={room:S.room,date:S.date,by:S.me.name,at:at,late:S.late,song:S.song,note:S.note,n:c2.n,a:c2.a,b:c2.b,x:c2.x};
+  var q=qGet().filter(function(it){return !(it.data.room===S.room&&it.data.date===S.date)});q.push({pin:S.pin,data:data,sum:sum});qSet(q);
+  if(S.wd&&S.date>=S.wd.from&&S.date<=S.wd.to){S.wd.rooms[S.room]=sum}
+  var ck='coda_wd_'+wk,cw=lsJSON(ck);if(cw){cw.rooms[S.room]=sum;lsSet(ck,JSON.stringify(cw))}
+  vSaved({a:c2.a,b:c2.b,x:c2.x,week:wk,at:at});flush()}}
+function vSaved(v){dock(null);$('app').innerHTML='<div class="ok"><svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#F5C518" stroke-width="1.6"><path d="M5 12.5l4.5 4.5L19 7"/></svg><h2>บันทึก ป.'+S.room+' แล้ว</h2><div class="sub">'+thd(S.date)+' · สัปดาห์ที่ '+v.week+' · '+v.at+'</div></div>'+
+ '<div class="trio"><div><div class="sub">ระดับ A</div><div class="v" style="color:var(--a)">'+v.a+'</div></div><div><div class="sub">ระดับ B</div><div class="v" style="color:var(--b)">'+v.b+'</div></div><div><div class="sub">ขาด</div><div class="v" style="color:var(--x)">'+v.x+'</div></div></div>'+
+ '<div class="qs hint" style="text-align:center"></div>'+(isOwner()?'':'<div class="hint" style="text-align:center">ส่งเข้าชีตแล้วครูเป้จะเห็นทันที</div>')+
+ '<button class="btn go" id="next">กลับไปหน้าห้องเรียน</button><button class="btn line" id="edit">แก้ไขห้องนี้</button>';
+ updQ();$('next').onclick=function(){S.w=v.week;loadWeek()};$('edit').onclick=function(){openRoom(S.room,S.date)}}
+
+/* ---------- สรุปสัปดาห์ (ครูหลัก) ---------- */
+function sumRows(){return sortedRooms().map(function(r){var s=roomState(r);return{room:r,s:s,g:s.g}})}
+function vSum(){S.tab='sum';var p=planOf(S.w),rows=sumRows();
+ var rubric=p&&/รูบริก|คุณภาพ/.test(p.tool);
+ var tot={n:0,x:0,a:0,b:0};rows.forEach(function(r){if(r.g){tot.n+=r.g.n;tot.x+=r.g.x;tot.a+=r.g.a;tot.b+=r.g.b}});
+ var tr=rows.map(function(r){var g=r.g;if(!g)return '<tr><td>ป.'+r.room+'</td><td colspan="6" class="hint" style="text-align:left">'+(r.s.k==='off'?'งดสอน · '+esc(r.s.why):r.s.k==='wait'?'ยังไม่ถึงวันสอน':'<span style="color:var(--go)">ยังไม่บันทึก</span>')+'</td></tr>';
+  return '<tr><td>ป.'+r.room+'</td><td>'+thd(g.date)+'</td><td>'+(g.n-g.x)+'/'+g.n+'</td><td class="'+(g.x?'X':'')+'">'+g.x+'</td><td class="A">'+g.a+'</td><td class="B">'+g.b+'</td><td>'+(g.late?g.late+'′':'–')+'</td></tr>'}).join('');
+ var notes=rows.filter(function(r){return r.g&&(r.g.note||r.g.song)}).map(function(r){return '<div class="note"><b>ป.'+r.room+'</b> · '+esc(r.g.by)+(r.g.song?' · '+esc(r.g.song):'')+(r.g.note?'<br>ปัญหา: '+esc(r.g.note):'')+'</div>'}).join('');
+ var map=p?'<div class="card plan"><div class="h" style="font-size:15px">ค่าที่จะลงฟอร์มบันทึกหลังสอน</div><ul>'+
+  (rubric?'<li>รูบริก: 4 ดีมาก = จำนวน A · 3 ดี = จำนวน B · 2, 1 = "-"</li><li>ตารางผ่าน/ไม่ผ่าน = "-" ทั้งหมด</li>':'<li>แบบสังเกตพฤติกรรม: ผ่าน = ทุกคน · ไม่ผ่าน/แก้ไข = "-"</li><li>ตารางรูบริก 4 ระดับ = "-" ทั้งหมด</li>')+
+  '<li>คุณลักษณะ ('+p.attr.length+' ข้อตามแผน): ดีเยี่ยม = A · ดี = B · ผ่าน = "-"</li><li>สมรรถนะ ('+p.comp.length+' ข้อตามแผน): ดีมาก = A · ดี = B</li><li>ข้อที่แผนไม่ได้ระบุ = "-"</li></ul></div>':'';
+ $('app').innerHTML=header()+planCard(true)+
+ '<div class="tbl"><table><thead><tr><th>ห้อง</th><th>วันที่</th><th>มา</th><th>ขาด</th><th>A</th><th>B</th><th>ช้า</th></tr></thead><tbody>'+tr+
+ '<tr><td><b>รวม</b></td><td></td><td>'+(tot.n-tot.x)+'/'+tot.n+'</td><td class="X">'+tot.x+'</td><td class="A">'+tot.a+'</td><td class="B">'+tot.b+'</td><td></td></tr></tbody></table></div>'+
+ (notes||'<div class="hint">ไม่มีหมายเหตุ/ปัญหาในสัปดาห์นี้</div>')+map+docCard(rows)+
+ '<div class="err" id="err"></div><div id="res"></div>'+
+ '<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn line sm" id="mk">สร้างชีตสรุปใน Google Sheet</button><button class="btn line sm" id="cp">คัดลอกตาราง</button><button class="btn line sm" id="rf">รีเฟรช</button></div>';
+ dock('<button class="btn go" id="xl"'+(p?'':' disabled')+'>สร้าง Excel บันทึกหลังสอน ส.'+S.w+'</button>'+tabs());bindWeek();bindTabs();$('rf').onclick=loadWeek;bindDoc();updQ();
+ $('xl').onclick=function(){makeXlsx(rows)};
+ $('mk').onclick=function(){if(S.busy)return;var b=this;b.textContent='กำลังสร้าง…';
+  call('weekSheet',[S.pin,S.w],function(v){b.textContent='สร้างชีตสรุปใน Google Sheet';$('res').innerHTML='<a class="btn line" href="'+esc(v.url)+'" target="_blank">เปิดแผ่น "'+esc(v.name)+'"</a>'},function(){b.textContent='ลองอีกครั้ง'})};
+ $('cp').onclick=function(){var t=[['ห้อง','วันที่','ผู้บันทึก','ทั้งหมด','มา','ขาด','A','B','ช้า(นาที)','เพลง/หัวข้อ','หมายเหตุ'].join('\t')].concat(rows.map(function(r){var g=r.g;
+   return g?['ป.'+r.room,g.date,g.by,g.n,g.n-g.x,g.x,g.a,g.b,g.late,g.song,g.note||'ไม่มี'].join('\t'):['ป.'+r.room,r.s.date,'','','','','','','','',r.s.k==='off'?'งดสอน '+r.s.why:'ยังไม่บันทึก'].join('\t')})).join('\n');
+  var done=function(){$('cp').textContent='คัดลอกแล้ว ✓'};
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).then(done,function(){prompt('คัดลอกข้อความนี้',t)});else prompt('คัดลอกข้อความนี้',t)}}
+
+/* ---------- เอกสารส่ง: กรอกฟอร์ม Excel จริงของโรงเรียน ----------
+   หลักการ: ก๊อปไฟล์ฟอร์มเปล่าของโรงเรียน แล้วเปลี่ยน "ค่า" ในเซลล์เดิมเท่านั้น
+   (สไตล์ ฟอนต์ เส้นขอบ เซลล์รวม โลโก้ ขนาดกระดาษ เหมือนต้นฉบับทุกอย่าง) */
+var MONF=['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+var ATTR=['รักชาติ','ซื่อสัตย์','วินัย','ใฝ่เรียนรู้','พอเพียง','มุ่งมั่น','ความเป็นไทย','จิตสาธารณะ'];
+var COMP=['สื่อสาร','คิด','แก้ปัญหา','ทักษะชีวิต','เทคโนโลยี'];
+var TEACHER='(นายบงการ  จิตต์สว่าง)';
+S.doc={};
+function formRooms(){return S.me.rooms.slice().sort(function(a,b){return a.localeCompare(b,'th',{numeric:true})})}
+function itemNo(text,names){var m=String(text).match(/\((\d)\.\d+\)/);if(m)return +m[1];for(var i=0;i<names.length;i++)if(String(text).indexOf(names[i])>=0)return i+1;return 0}
+function docDefaults(rows){var p=planOf(S.w)||{media:[]},probs=[],offs={};
+ formRooms().forEach(function(r){var x=rows.filter(function(y){return y.room===r})[0];if(!x)return;
+  if(x.g&&x.g.note)probs.push('ป.'+r+' '+x.g.note);
+  if(!x.g&&x.s.k==='off'){(offs[x.s.why]=offs[x.s.why]||[]).push('ป.'+r)}});
+ Object.keys(offs).forEach(function(k){probs.push(offs[k].join(', ')+' งดเรียน: '+k)});
+ return{quality:'ดี',improve:'-',problem:probs.length?probs.join(' / '):'ไม่มี',fix:'-',media:p.media.map(function(m,i){return(i+1)+'. '+m}).join('  ')}}
+function docCard(rows){S.doc=S.doc||{};if(S.doc[S.w]&&!S.doc[S.w].edited)delete S.doc[S.w];var d=S.doc[S.w]||(S.doc[S.w]=docDefaults(rows));
+ var miss=sumRows().filter(function(r){return !r.g&&r.s.k==='todo'}).map(function(r){return 'ป.'+r.room});
+ var f=function(k,lab,ph){var lim=LIM[k];return '<label class="hint" for="doc_'+k+'" style="display:flex;justify-content:space-between"><span>'+lab+'</span><span id="cnt_'+k+'">'+cnt(k,d[k])+'</span></label><textarea id="doc_'+k+'" data-doc="'+k+'" rows="2" placeholder="'+esc(ph||'')+'">'+esc(d[k])+'</textarea>'};
+ return '<div class="card plan" style="gap:8px"><div class="h" style="font-size:15px">เอกสารส่ง: บันทึกหลังการสอน (ฟอร์มโรงเรียน)</div>'+
+ (miss.length?'<div class="note" style="border-color:var(--x)">ยังไม่บันทึก: '+miss.join(', ')+' — ช่องของห้องนี้จะเป็น "-"</div>':'')+
+ '<label class="hint" for="doc_quality">คุณภาพของแผนอยู่ในระดับ</label><div class="chips" id="doc_quality">'+['ดี','พอใช้','ปรับปรุง'].map(function(q){return '<button class="chip '+(d.quality===q?'on':'')+'" data-q="'+q+'">'+q+'</button>'}).join('')+'</div>'+
+ f('improve','สิ่งที่ควรปรับปรุงในแผน','-')+f('problem','ปัญหา/อุปสรรค (ดึงจากที่ครูบันทึก)','ไม่มี')+f('fix','ได้แก้ไขอย่างไร','-')+f('media','สื่อการสอน (จากแผน)','1. ...')+
+ '<div class="hint">ช่องว่าง = ใส่ "-" ให้เอง · แก้แล้วกดสร้างใหม่ได้เสมอ</div></div>'}
+/* ช่องในฟอร์มเป็นบรรทัดเดียว (ห้ามแก้สไตล์ฟอร์ม) → จำกัดความยาวที่พิมพ์ได้ไม่ล้นกระดาษ / สื่อการสอนมี 2 บรรทัด (A65, A66) */
+var LIM={improve:120,problem:70,fix:70,media:140};
+function cnt(k,v){var n=String(v||'').trim().length,l=LIM[k];return '<span style="color:'+(n>l?'var(--x)':'var(--dim)')+'">'+n+'/'+l+(n>l?' ยาวเกิน จะถูกตัดในกระดาษ':'')+'</span>'}
+function splitLine(s,l){s=String(s||'').trim();if(s.length<=l)return[s,''];var cut=s.lastIndexOf(' ',l);if(cut<l*0.6)cut=l;return[s.slice(0,cut).trim(),s.slice(cut).trim()]}
+function bindDoc(){var d=S.doc[S.w];each('[data-doc]',function(t){t.oninput=function(){var k=t.getAttribute('data-doc');d[k]=t.value;d.edited=1;$('cnt_'+k).innerHTML=cnt(k,t.value)}});
+ each('[data-q]',function(b){b.onclick=function(){d.quality=b.getAttribute('data-q');d.edited=1;each('[data-q]',function(x){x.className='chip'+(x===b?' on':'')})}})}
+
+function cIdx(s){var n=0;for(var i=0;i<s.length;i++)n=n*26+s.charCodeAt(i)-64;return n}
+function cName(n){var s='';while(n>0){var m=(n-1)%26;s=String.fromCharCode(65+m)+s;n=Math.floor((n-1)/26)}return s}
+function xesc(s){return String(s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]}).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g,'')}
+function cellXml(ref,s,v){var st=s?' s="'+s+'"':'';
+ if(v===''||v==null)return '<c r="'+ref+'"'+st+'/>';
+ if(v&&v.rich)return '<c r="'+ref+'"'+st+' t="inlineStr"><is>'+v.rich+'</is></c>';
+ if(typeof v==='number')return '<c r="'+ref+'"'+st+'><v>'+v+'</v></c>';
+ return '<c r="'+ref+'"'+st+' t="inlineStr"><is><t xml:space="preserve">'+xesc(v)+'</t></is></c>'}
+/** เปลี่ยนค่าในเซลล์เดิม (คงสไตล์ s= เดิม) ถ้าเซลล์ไม่มีในแถว แทรกตามลำดับคอลัมน์ */
+function setCells(xml,vals){var miss=[],done={};
+ // รอบเดียว: แทนเฉพาะเซลล์ที่อยู่ใน vals
+ xml=xml.replace(/<c r="([A-Z]+\d+)"([^>]*?)(?:\/>|>[\s\S]*?<\/c>)/g,function(m,ref,attrs){
+  if(!Object.prototype.hasOwnProperty.call(vals,ref))return m;done[ref]=1;return cellXml(ref,(attrs.match(/\ss="(\d+)"/)||[])[1],vals[ref])});
+ Object.keys(vals).forEach(function(ref){if(done[ref])return;var v=vals[ref];if(v==='')return;
+  var row=ref.replace(/^[A-Z]+/,''),col=cIdx(ref.replace(/\d+$/,''));
+  var rm=xml.match(new RegExp('<row r="'+row+'"[^>]*?(/>|>[\\s\\S]*?</row>)'));
+  if(!rm){miss.push(ref);return}
+  var rowXml=rm[0];if(rm[1]==='/>')rowXml=rowXml.slice(0,-2)+'></row>';
+  var cells=rowXml.match(/<c r="([A-Z]+)\d+"/g)||[],pos=-1;
+  for(var i=0;i<cells.length;i++){if(cIdx(cells[i].match(/"([A-Z]+)/)[1])>col){pos=rowXml.indexOf(cells[i]);break}}
+  var nc=cellXml(ref,'',v);rowXml=pos<0?rowXml.replace(/<\/row>$/,nc+'</row>'):rowXml.slice(0,pos)+nc+rowXml.slice(pos);
+  xml=xml.slice(0,rm.index)+rowXml+xml.slice(rm.index+rm[0].length)});
+ if(miss.length)console.warn('ไม่พบแถวสำหรับ',miss);return xml}
+function dash(n){return n?n:'-'}
+/** ค่าทุกช่องของฟอร์ม (ref -> ค่า) */
+function formValues(rows){var p=planOf(S.w),d=(S.doc||{})[S.w]||docDefaults(rows),V={};
+ var rubric=/รูบริก|คุณภาพ/.test(p.tool);
+ var um=String(p.unit).match(/หน่วยที่\s*(\d+)\s*(.*)/)||[0,'',p.unit];
+ var mon=d2n(S.me.termStart)+(S.w-1)*7,fri=mon+4,a=n2d(mon).split('-'),b=n2d(fri).split('-');
+ var range=a[1]===b[1]?(+a[2])+'-'+(+b[2]):(+a[2])+' '+MON[+a[1]-1]+(a[0]!==b[0]?' '+(+a[0]+543):'')+' - '+(+b[2]);
+ V.B6='ดนตรี';V.K6=um[1]?+um[1]:'-';V.T6=um[2]||'-';V.B7=p.title;V.C8='4';V.K8=S.w;V.Q8=range;V.Y8=MONF[+b[1]-1];V.AK8='พ.ศ. '+(+b[0]+543);
+ var obj=p.obj.map(function(o){return clean(o).replace(/\s*\((K|P|A)\)\s*$/,'')});
+ for(var i=0;i<6;i++)V['A'+(12+i)]=obj[i]?(i+1)+'.   '+obj[i]:'';
+ var attrOn={},compOn={};p.attr.forEach(function(t){var k=itemNo(t,ATTR);if(k)attrOn[k]=1});p.comp.forEach(function(t){var k=itemNo(t,COMP);if(k)compOn[k]=1});
+ formRooms().forEach(function(room,i){var x=rows.filter(function(y){return y.room===room})[0]||{},g=x.g;
+  var n=g?g.n:(S.me.roster[room]||[]).length,A=g?g.a:0,B=g?g.b:0;
+  var bc=cIdx('C')+4*i,ac=cIdx('C')+3*i,col=function(o){return cName(bc+o)};
+  ['19','26','48'].forEach(function(r){V[col(0)+r]='ป.'+room});V[cName(ac)+'35']='ป.'+room;
+  // ตารางผ่าน/ไม่ผ่าน (แบบสังเกตพฤติกรรม)
+  V[col(0)+'20']=!rubric?n:'-';V[col(0)+'21']=!rubric&&g?n:'-';V[col(0)+'22']='-';V[col(0)+'23']='-';
+  // ตารางรูบริก 4 ระดับ
+  V[col(0)+'27']=rubric?n:'-';V[col(0)+'29']=rubric&&g?dash(A):'-';V[col(0)+'30']=rubric&&g?dash(B):'-';V[col(0)+'31']='-';V[col(0)+'32']='-';
+  // คุณลักษณะ: ดีเยี่ยม(3) = A / ดี(2) = B / ผ่าน(1) = "-"
+  V[cName(ac)+'36']=n;V[cName(ac)+'46']='-';
+  for(var k=1;k<=8;k++){var on=attrOn[k]&&g;V[cName(ac)+(37+k)]=on?dash(A):'-';V[cName(ac+1)+(37+k)]=on?dash(B):'-';V[cName(ac+2)+(37+k)]='-'}
+  // สมรรถนะ: ดีมาก(3) = A / ดี(2) = B / ผ่าน, ปรับปรุง = "-"
+  V[col(0)+'49']=n;V[col(0)+'56']='-';
+  for(var j=1;j<=5;j++){var on2=compOn[j]&&g;V[col(0)+(50+j)]=on2?dash(A):'-';V[col(1)+(50+j)]=on2?dash(B):'-';V[col(2)+(50+j)]='-';V[col(3)+(50+j)]='-'}});
+ // ช่องห้องที่ 11+ ในฟอร์ม (ป.x/xx) ล้างทิ้ง
+ V.AQ19='';V.AQ26='';V.AQ48='';['AG','AJ','AM','AP'].forEach(function(c){V[c+'35']=''});
+ var t=function(s){s=String(s||'').trim();return s||'-'};
+ V.C58=d.quality||'ดี';V.H59=t(d.improve);V.C61=t(d.problem);V.C62=t(d.fix);var md=splitLine(t(d.media),LIM.media/2);V.A65=md[0];V.A66=md[1];V.S69=TEACHER;
+ return V}
+/** บันทึกหลังสอน + ใบปะหน้า = ไฟล์เดียว 2 หน้า ตามฟอร์มไฟล์ปะหน้าเดิม (คู่แผ่น ส.19 + Sheet19)
+    หน้า 1 (sheet1.xml = ส.19): หัวกระดาษ + จุดประสงค์ + ตารางผ่าน/ไม่ผ่าน (ช่องบน) + รูบริก 4-3-2-1 (ช่องล่าง) ห้อง ป.4/1–4/10 = C–L
+    กติกาพี่หนุ่ย: ใช้ตารางเดียวตามแผน อีกตาราง "-" / ช่องที่ไม่ประเมินใส่ "-" ห้ามว่าง / ห้ามตัดตาราง / คอลัมน์ห้องเกินปล่อยว่าง */
+function coverValues(rows){var p=planOf(S.w),R=formValues(rows),V={};
+ var rubric=/รูบริก|คุณภาพ/.test(p.tool);
+ V.L2='สัปดาห์ที่ '+S.w;V.B5=R.B6;V.E5=R.K6;V.I5=R.T6;V.B6=R.B7;V.C7='4';V.E7=R.Q8;V.H7=R.Y8;V.K7=R.AK8.replace('พ.ศ. ','พ.ศ.   ');
+ for(var i=0;i<6;i++)V['A'+(10+i)]=R['A'+(12+i)];
+ formRooms().forEach(function(room,i){var c=cName(cIdx('C')+i),x=rows.filter(function(y){return y.room===room})[0]||{},g=x.g;
+  var n=g?g.n:(S.me.roster[room]||[]).length,A=g?g.a:0,B=g?g.b:0;
+  V[c+'17']='ป.'+room;V[c+'24']='ป.'+room;
+  V[c+'18']=!rubric?n:'-';V[c+'19']=!rubric&&g?n:'-';V[c+'20']='-';V[c+'21']='-';
+  V[c+'25']=rubric?n:'-';V[c+'27']=rubric&&g?dash(A):'-';V[c+'28']=rubric&&g?dash(B):'-';V[c+'29']='-';V[c+'30']='-'});
+ return V}
+/* หน้า 2 (sheet2.xml = Sheet19): คุณลักษณะ (3 ช่อง/ห้อง C,F,I..) + สมรรถนะ (4 ช่อง/ห้อง C,G,K..) + ประเมินแผน + สื่อ + ลงชื่อ
+   ช่องติ๊กเป็นข้อความหลายแบบอักษร (Wingdings þ = ติ๊ก / o = ช่องว่าง) → เขียนแบบเดิมของฟอร์ม เปลี่ยนแค่ช่องที่ติ๊ก */
+var RUN_W='<r><rPr><sz val="14"/><color theme="1"/><rFont val="Wingdings"/><charset val="2"/></rPr><t>',RUN_T='<r><rPr><sz val="14"/><color theme="1"/><rFont val="AngsanaUPC"/><family val="1"/></rPr><t xml:space="preserve">';
+function ticks(parts){return{rich:parts.map(function(p){return typeof p==='boolean'?RUN_W+(p?'þ':'o')+'</t></r>':RUN_T+xesc(p)+'</t></r>'}).join('')}}
+var COMP_ROW={1:18,2:19,3:20,4:22,5:24};
+function noProblem(s){s=String(s||'').trim();return !s||s==='-'||s==='ไม่มี'}
+function page2Values(rows){var p=planOf(S.w),d=(S.doc||{})[S.w]||docDefaults(rows),V={};
+ var attrOn={},compOn={};p.attr.forEach(function(t){var k=itemNo(t,ATTR);if(k)attrOn[k]=1});p.comp.forEach(function(t){var k=itemNo(t,COMP);if(k)compOn[k]=1});
+ var rooms=formRooms();
+ for(var i=0;i<14;i++){var ac=cIdx('C')+3*i,room=rooms[i];
+  if(!room){[2,3,13].forEach(function(r){V[cName(ac)+r]=''});for(var k0=5;k0<=12;k0++){V[cName(ac)+k0]='';V[cName(ac+1)+k0]='';V[cName(ac+2)+k0]=''}continue}
+  var x=rows.filter(function(y){return y.room===room})[0]||{},g=x.g,n=g?g.n:(S.me.roster[room]||[]).length,A=g?g.a:0,B=g?g.b:0;
+  V[cName(ac)+'2']='ป.'+room;V[cName(ac)+'3']=n;V[cName(ac)+'13']='-';
+  for(var k=1;k<=8;k++){var on=attrOn[k]&&g;V[cName(ac)+(4+k)]=on?dash(A):'-';V[cName(ac+1)+(4+k)]=on?dash(B):'-';V[cName(ac+2)+(4+k)]='-'}}
+ for(var j=0;j<11;j++){var cc=cIdx('C')+4*j,rm=rooms[j];
+  if(!rm){V[cName(cc)+'15']='';V[cName(cc)+'16']='';for(var q=1;q<=5;q++)for(var o=0;o<4;o++)V[cName(cc+o)+COMP_ROW[q]]='';continue}
+  var x2=rows.filter(function(y){return y.room===rm})[0]||{},g2=x2.g,n2=g2?g2.n:(S.me.roster[rm]||[]).length;
+  V[cName(cc)+'15']='ป.'+rm;V[cName(cc)+'16']=n2;
+  for(var q2=1;q2<=5;q2++){var on2=compOn[q2]&&g2,r2=COMP_ROW[q2];V[cName(cc)+r2]=on2?dash(g2.a):'-';V[cName(cc+1)+r2]=on2?dash(g2.b):'-';V[cName(cc+2)+r2]='-';V[cName(cc+3)+r2]='-'}}
+ var qv=d.quality||'ดี';V.A28=ticks([qv==='ดี','ดี        ',qv==='พอใช้',' พอใช้       ',qv==='ปรับปรุง','  ปรับปรุง']);
+ var im=splitLine(String(d.improve||'').trim()||'-',LIM.improve/2);V.A30=im[0];V.A31=im[1];
+ var np=noProblem(d.problem);V.A33=ticks([!np,'  มี      ',np,' ไม่มี']);
+ V.A35=np?'-':String(d.problem).trim();V.A36=np?'':'แก้ไข: '+(String(d.fix||'').trim()||'-');
+ var md=splitLine(String(d.media||'').trim()||'-',LIM.media/2);V.S27=md[0];V.S28=md[1];
+ V.S29='ลงชื่อ.............................................นายบงการ จิตต์สว่าง (ครูประจำวิชา)';
+ return V}
+/** เติมค่าหลายแผ่นในไฟล์เดียว: {"xl/worksheets/sheet1.xml": vals, ...} */
+function fillXlsx(b64,bySheet){return JSZip.loadAsync(b64ToBuf(b64)).then(function(z){
+ return Promise.all(Object.keys(bySheet).map(function(path){return z.file(path).async('string').then(function(x){z.file(path,setCells(x,bySheet[path]),{createFolders:false})})})).then(function(){
+  return z.generateAsync({type:'base64',compression:'DEFLATE',mimeType:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'})})})}
+function b64ToBuf(b){var s=atob(b),u=new Uint8Array(s.length);for(var i=0;i<s.length;i++)u[i]=s.charCodeAt(i);return u}
+function makeXlsx(rows){if(S.busy)return;var btn=$('xl'),lab=btn.textContent;
+ if(typeof JSZip==='undefined'){$('err').textContent='โหลดตัวสร้างไฟล์ไม่สำเร็จ (ต้องต่อเน็ต) ลองรีเฟรช';return}
+ var miss=rows.filter(function(r){return !r.g&&r.s.k==='todo'}).map(function(r){return 'ป.'+r.room});
+ if(miss.length&&!confirm('ยังไม่บันทึก '+miss.join(', ')+'\nช่องของห้องนี้จะเป็น "-" สร้างต่อไหม?'))return;
+ btn.textContent='กำลังสร้าง…';var ww=('0'+S.w).slice(-2);
+ var getT=function(fn,key){return new Promise(function(ok,no){if(S[key])return ok(S[key]);call(fn,[S.pin],function(b){S[key]=b;ok(b)},no)})};
+ getT('recordTemplate','recordB64').then(function(t){
+  return fillXlsx(t,{'xl/worksheets/sheet1.xml':coverValues(rows),'xl/worksheets/sheet2.xml':page2Values(rows)})}).then(function(out){
+   btn.textContent=lab;
+   var files=[{name:'บันทึกหลังการสอน บงการ ส'+ww+'.xlsx',b64:out,what:'บันทึกหลังสอน + ใบปะหน้า ไฟล์เดียว 2 หน้า (หน้า 1 ใบปะหน้า / หน้า 2 คุณลักษณะ สมรรถนะ ลงชื่อ)'}];
+   S.lastFiles=files;
+   $('res').innerHTML='<div class="card plan" style="gap:8px"><div class="h" style="font-size:15px">✓ สร้างแล้ว · สัปดาห์ที่ '+S.w+'</div>'+
+    files.map(function(f,i){return '<div class="note"><b>'+esc(f.name)+'</b><br>'+f.what+'</div><button class="btn line sm" data-dl="'+i+'">ดาวน์โหลดอีกครั้ง</button>'}).join('')+
+    '<div class="hint">ใช้ฟอร์มจริงของโรงเรียน เปลี่ยนเฉพาะค่าในช่อง ไม่แก้ฟอร์ม · ลายเซ็นครูเซ็นเอง</div>'+
+    '<button class="btn line" id="gd">เก็บลง Google Drive (Coda งานส่ง)</button><div id="gdr" class="hint"></div>'+
+    '<div class="hint">PDF: บนคอม ดับเบิลคลิก "ทำPDF_จัดเก็บงานส่ง" → 02_งานส่ง\สัปดาห์'+ww+'\สัปดาห์ที่'+ww+'_บันทึกหลังสอน_ป4.pdf</div></div>';
+   files.forEach(function(f,i){setTimeout(function(){download(f.name,f.b64)},i*700)});
+   each('[data-dl]',function(b){b.onclick=function(){var f=files[+b.getAttribute('data-dl')];download(f.name,f.b64)}});
+   $('gd').onclick=function(){if(S.busy)return;var g=this;g.textContent='กำลังเก็บ…';
+    call('saveFile',[S.pin,S.w,files[0].name,files[0].b64],function(v){g.textContent='เก็บแล้ว ✓';$('gdr').innerHTML='<a href="'+esc(v.url)+'" target="_blank" style="color:var(--go)">เปิดไฟล์</a> · <a href="'+esc(v.folder)+'" target="_blank" style="color:var(--go)">เปิดโฟลเดอร์สัปดาห์'+ww+'</a>'},function(){g.textContent='ลองอีกครั้ง'})};
+   $('res').scrollIntoView({behavior:'smooth'})})["catch"](function(e){btn.textContent=lab;if(e&&e.message)$('err').textContent='สร้างไฟล์ไม่สำเร็จ: '+e.message})}
+function download(name,b64){var blob=new Blob([b64ToBuf(b64)],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+ var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove()},4000)}
+/* ---------- เปิดแอป: เคยเข้าในเครื่องนี้แล้ว -> เข้าหน้าห้องเรียนทันที แล้วตรวจ PIN + อัปเดตข้อมูลเบื้องหลัง ---------- */
+function start(){var pin=lsGet('coda_pin'),me=lsJSON('coda_me');
+ if(!pin||!me){vPin();return}
+ S.pin=pin;S.me=me;S.me.today=todayLocal();S.me.thisWeek=weekOf(S.me.today);S.w=Math.max(1,S.me.thisWeek);loadWeek();flush();
+ rpc('login',[pin]).then(function(v){S.me=v;lsSet('coda_me',JSON.stringify(v))},
+  function(e){if(isNet(e))return;/* PIN ถูกเปลี่ยน/ปิด -> ออกจากระบบ */lsSet('coda_pin',null);lsSet('coda_me',null);alert('ต้องเข้าระบบใหม่: '+errText(e));S={pin:'',me:null,w:1,tab:'rooms',marks:{},hist:[]};vPin()})}
+start();
+</script>
+</body>
+</html>
