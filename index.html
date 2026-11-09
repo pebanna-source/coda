@@ -137,8 +137,8 @@ function vPin(){dock(null);$('app').innerHTML='<div class="top"><div class="logo
  $('pin').onkeydown=function(e){if(e.key==='Enter')$('enter').click()};$('pin').focus()}
 
 /* เปิดสัปดาห์: ถ้ามีข้อมูลเก่าในเครื่องขึ้นทันที แล้วอัปเดตจากระบบเบื้องหลัง */
-function showWeek(){S.screen='week';S.tab==='sum'&&isOwner()?vSum():vHome()}
-function loadWeek(){var w=S.w,key='coda_wd_'+w,cached=lsJSON(key);
+function showWeek(){if(S.tab==='news'){vNews();return}S.screen='week';S.tab==='sum'&&isOwner()?vSum():vHome()}
+function loadWeek(){fetchNews();var w=S.w,key='coda_wd_'+w,cached=lsJSON(key);
  if(cached){S.wd=cached;mergeQueued();showWeek()}
  else $('app').innerHTML='<div class="hint" style="padding:40px 0;text-align:center">กำลังโหลดสัปดาห์ที่ '+w+'…</div><div class="err" id="err"></div>';
  rpc('week',[S.pin,w]).then(function(v){lsSet(key,JSON.stringify(v));if(S.w!==w)return;var same=cached&&JSON.stringify(cached)===JSON.stringify(v);
@@ -154,8 +154,8 @@ function bindWeek(){$('wp').onclick=function(){if(S.w>1){S.w--;loadWeek()}};$('w
 function planCard(full){if(useGradeBar()&&curGrade()!=='4')return '<div class="card hint">ยังไม่มีแผน ป.'+curGrade()+' ในระบบ · เช็คชื่อได้ตามปกติ</div>';var p=planOf(S.w);if(!p)return '<div class="card hint">ยังไม่มีแผนของสัปดาห์นี้ในแผ่น "แผนรายสัปดาห์"</div>';
  return '<div class="card plan"><div class="sub">'+(grades().length>1?'ป.4 · ':'')+'แผนที่ '+p.week+' · '+esc(p.unit)+'</div><div class="h">'+esc(p.title)+'</div>'+
  (full?'<ul>'+p.obj.map(function(o){return '<li>'+esc(clean(o))+'</li>'}).join('')+'</ul>':'')+'<div class="sub">ประเมินด้วย: '+esc(p.tool||'-')+'</div></div>'}
-function tabs(){return isOwner()?'<div class="tabs"><button id="tR" class="'+(S.tab==='rooms'?'on':'')+'">ห้องเรียน</button><button id="tS" class="'+(S.tab==='sum'?'on':'')+'">สรุปสัปดาห์</button></div>':''}
-function bindTabs(){if(!isOwner())return;$('tR').onclick=function(){S.tab='rooms';vHome()};$('tS').onclick=function(){S.tab='sum';vSum()}}
+function tabs(){return '<div class="tabs"><button id="tR" class="'+(S.tab==='rooms'?'on':'')+'">ห้องเรียน</button>'+(isOwner()?'<button id="tS" class="'+(S.tab==='sum'?'on':'')+'">สรุปสัปดาห์</button>':'')+'<button id="tN" class="'+(S.tab==='news'?'on':'')+'">ข่าว/งาน'+(openCount()?' ('+openCount()+')':'')+'</button></div>'}
+function bindTabs(){$('tR').onclick=function(){S.screen='week';S.tab='rooms';vHome()};if($('tS'))$('tS').onclick=function(){S.screen='week';S.tab='sum';vSum()};$('tN').onclick=function(){vNews();fetchNews()}}
 
 /* ---------- หน้าห้องเรียน ---------- */
 function roomState(room){var date=roomDate(room,S.w),g=S.wd.rooms[room],off=offOf(room,date);
@@ -228,6 +228,39 @@ function vSaved(v){dock(null);$('app').innerHTML='<div class="ok"><svg width="64
  '<div class="qs hint" style="text-align:center"></div>'+(isOwner()?'':'<div class="hint" style="text-align:center">ส่งเข้าชีตแล้วครูเป้จะเห็นทันที</div>')+
  '<button class="btn go" id="next">กลับไปหน้าห้องเรียน</button><button class="btn line" id="edit">แก้ไขห้องนี้</button>';
  updQ();$('next').onclick=function(){S.w=v.week;loadWeek()};$('edit').onclick=function(){openRoom(S.room,S.date)}}
+
+/* ---------- ข่าวและงานจากไลน์ (ทุกคนเห็นข่าวรวม + งานที่ส่งถึงตนเอง · ครูหลัก/ผู้ดูแลเป็นคนลง) ---------- */
+function openCount(){return (S.news&&S.news.items||[]).filter(function(i){return i.type==='งาน'&&i.mine&&i.done.indexOf(S.me.name)<0}).length}
+function updBadge(){var b=$('tN');if(b)b.textContent='ข่าว/งาน'+(openCount()?' ('+openCount()+')':'')}
+function fetchNews(){rpc('news',[S.pin]).then(function(v){S.news=v;updBadge();if(S.screen==='news'&&!S.nf_dirty)vNews()},function(){})}
+function vNews(){S.tab='news';S.screen='news';var d=S.news||{items:[],teachers:[]},me=S.me.name,f=S.nf||(S.nf={type:'ข่าว',title:'',detail:'',due:'',to:[]});
+ var mine=d.items.filter(function(i){return i.type==='งาน'&&i.mine}),news=d.items.filter(function(i){return i.type==='ข่าว'}),sent=d.items.filter(function(i){return i.type==='งาน'&&!i.mine&&i.by===me});
+ mine.sort(function(a,b){var x=a.done.indexOf(me)>=0,y=b.done.indexOf(me)>=0;return x-y||String(a.due||'9').localeCompare(String(b.due||'9'))});
+ var meta=function(i){return '<div class="sub">'+(i.due?'ส่ง '+thd(i.due)+' · ':'')+'ลงโดย '+esc(i.by)+' · '+esc(String(i.at).slice(0,10))+'</div>'};
+ var del=function(i){return isOwner()?'<button class="btn line sm" data-nd="'+esc(i.id)+'">ลบ</button>':''};
+ var card=function(i,act){return '<div class="card" style="gap:6px"><div style="font-family:Mitr;font-size:16px">'+esc(i.title)+'</div>'+(i.detail?'<div class="sub" style="white-space:pre-wrap">'+esc(i.detail)+'</div>':'')+meta(i)+'<div style="display:flex;gap:8px;flex-wrap:wrap">'+(act||'')+del(i)+'</div></div>'};
+ var form=!isOwner()?'':'<div class="card" style="display:flex;flex-direction:column;gap:8px"><div style="font-family:Mitr;font-size:16px">ลงข่าว/งานจากไลน์</div>'+
+  '<div class="chips">'+['ข่าว','งาน'].map(function(t){return '<button class="chip '+(f.type===t?'on':'')+'" data-nt="'+t+'">'+t+'</button>'}).join('')+'</div>'+
+  '<input type="text" id="nT" maxlength="100" placeholder="หัวข้อ" value="'+esc(f.title)+'">'+
+  '<textarea id="nD" maxlength="300" rows="3" placeholder="รายละเอียด (วางข้อความจากไลน์แล้วตัดให้สั้น)">'+esc(f.detail)+'</textarea>'+
+  (f.type==='งาน'?'<label class="hint" for="nW">วันส่ง (ไม่มีก็เว้นว่าง)</label><input type="date" id="nW" value="'+esc(f.due)+'"><div class="hint">ส่งถึง (เลือกคนที่ถูกแท็กในไลน์)</div><div class="chips">'+d.teachers.map(function(n){return '<button class="chip '+(f.to.indexOf(n)>=0?'on':'')+'" data-nto="'+esc(n)+'">'+esc(n)+'</button>'}).join('')+'</div>':'')+
+  '<div class="hint">ห้ามใส่รหัสผ่าน เลขบัตร หรือชื่อ-รหัสนักเรียน</div><div class="err" id="err"></div><button class="btn go" id="nS">ลงให้ทุกคนเห็น</button></div>';
+ var sec=function(t,a){return a?'<div style="font-family:Mitr;font-size:17px;margin-top:6px">'+t+'</div>'+a:''};
+ $('app').innerHTML='<div class="top"><div class="logo grow">'+LOGO+'Coda</div><span class="tag '+(isOwner()?'own':'')+'">'+esc(S.me.role)+'</span><span class="sub">'+esc(me)+'</span></div>'+form+
+  sec('งานของฉัน',mine.map(function(i){var ok=i.done.indexOf(me)>=0;return card(i,'<button class="btn '+(ok?'line':'go')+' sm" data-nk="'+esc(i.id)+'" data-v="'+(ok?0:1)+'">'+(ok?'✓ เสร็จแล้ว (แตะเพื่อยกเลิก)':'ทำเสร็จแล้ว')+'</button>')}).join(''))+
+  sec('ข่าวสำคัญ',news.map(function(i){return card(i)}).join(''))+
+  sec('งานที่ลงให้คนอื่น',sent.map(function(i){return card(i,'<span class="sub">ส่งถึง '+esc(i.to.join(', '))+' · เสร็จ '+i.done.length+'/'+i.to.length+'</span>')}).join(''))+
+  (!mine.length&&!news.length&&!sent.length?'<div class="hint" style="text-align:center;padding:24px 0">ยังไม่มีข่าวหรืองาน</div>':'')+(isOwner()?'':'<div class="err" id="err"></div>');
+ dock(tabs());bindTabs();
+ var wr=function(fn,args){if(S.busy)return;S.nf_dirty=false;call(fn,args,function(v){S.news=v;vNews()})};
+ if(isOwner()){var dirty=function(){S.nf_dirty=true};
+  $('nT').oninput=function(){f.title=this.value;dirty()};$('nD').oninput=function(){f.detail=this.value;dirty()};if($('nW'))$('nW').onchange=function(){f.due=this.value;dirty()};
+  each('[data-nt]',function(b){b.onclick=function(){f.type=b.getAttribute('data-nt');dirty();vNews()}});
+  each('[data-nto]',function(b){b.onclick=function(){var n=b.getAttribute('data-nto'),k=f.to.indexOf(n);k<0?f.to.push(n):f.to.splice(k,1);dirty();vNews()}});
+  $('nS').onclick=function(){var e=$('err');if(!f.title.trim()){e.textContent='ใส่หัวข้อก่อน';return}if(f.type==='งาน'&&!f.to.length){e.textContent='เลือกคนรับงานอย่างน้อย 1 คน';return}
+   if(S.busy)return;call('newsAdd',[S.pin,f],function(v){S.news=v;S.nf=null;S.nf_dirty=false;vNews()})};
+  each('[data-nd]',function(b){b.onclick=function(){if(confirm('ลบรายการนี้สำหรับทุกคน?'))wr('newsDel',[S.pin,b.getAttribute('data-nd')])}})}
+ each('[data-nk]',function(b){b.onclick=function(){wr('newsDone',[S.pin,b.getAttribute('data-nk'),b.getAttribute('data-v')==='1'])}})}
 
 /* ---------- สรุปสัปดาห์ (ครูหลัก) ---------- */
 function sumRows(){return shownRooms().map(function(r){var s=roomState(r);return{room:r,s:s,g:s.g}})}
