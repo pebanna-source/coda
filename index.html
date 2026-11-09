@@ -143,6 +143,7 @@ function roomDate(room,w){var t=S.me.timetable[room];return t&&t.day?n2d(d2n(S.m
 function offOf(room,date){if(!date)return null;var o=S.me.off.filter(function(o){return o.date===date&&(!o.rooms.length||o.rooms.indexOf(room)>=0)});return o[0]||null}
 function planG(w,g){return S.me.plans.filter(function(p){return p.week===w&&String(p.grade||'4')===g})[0]||null}
 function planOf(w){return planG(w,'4')}
+function docK(){return S.w+'_'+curGrade()}
 function clean(s){return String(s).replace(/^[-•\s]+/,'')}
 function sortedRooms(){var tt=S.me.timetable,k=function(r){var t=tt[r]||{};return (t.day||9)*100+(parseInt(t.period,10)||99)};return S.me.rooms.slice().sort(function(a,b){return k(a)-k(b)||a.localeCompare(b,"th",{numeric:true})})}
 /* ครูหลัก + ผู้ดูแล เห็นทุกหน้า · การตั้งค่าและลิงก์ชีตอยู่ที่ครูหลักคนเดียว (Apps Script กันอีกชั้น) */
@@ -163,7 +164,7 @@ function weekMin(){return isOwner()?'':n2d(d2n(S.me.termStart)+(S.me.thisWeek-1)
 function vPin(){dock(null);$('app').innerHTML='<div class="top"><div class="logo">'+LOGO+'Coda</div><span class="sub">จบคาบ จบงาน</span></div>'+
  '<div class="card" style="display:flex;flex-direction:column;gap:12px"><div style="font-family:Mitr;font-size:18px">ใส่ PIN ของคุณครู</div>'+
  '<input class="pin" id="pin" type="password" inputmode="numeric" maxlength="6" autocomplete="off"><div class="err" id="err"></div>'+
- '<button class="btn go" id="enter">เข้าใช้งาน</button></div><div class="hint">PIN เป็นของคุณครูแต่ละท่าน ห้ามส่งต่อ · ครูเป้และครูแทนใช้ลิงก์เดียวกัน · รุ่น 3</div>';
+ '<button class="btn go" id="enter">เข้าใช้งาน</button></div><div class="hint">PIN เป็นของคุณครูแต่ละท่าน ห้ามส่งต่อ · ครูเป้และครูแทนใช้ลิงก์เดียวกัน · รุ่น 4</div>';
  $('enter').onclick=function(){S.pin=$('pin').value.trim();if(!S.pin||S.busy)return;$('enter').textContent='กำลังตรวจ…';
   call('login',[S.pin],function(v){S.me=v;lsSet('coda_pin',S.pin);lsSet('coda_me',JSON.stringify(v));S.w=Math.max(1,v.thisWeek);loadWeek()},function(){$('enter').textContent='เข้าใช้งาน'})};
  $('pin').onkeydown=function(e){if(e.key==='Enter')$('enter').click()};$('pin').focus()}
@@ -477,23 +478,23 @@ function vTerm(){S.tab='today';S.screen='term';var me=S.me,gs=grades();if(gs.ind
 
 /* ---------- สรุปสัปดาห์ (ครูหลัก) ---------- */
 function sumRows(){return shownRooms().map(function(r){var s=roomState(r);return{room:r,s:s,g:s.g}})}
-function vSum(){S.tab='sum';S.screen='week';var mineDoc=curGrade()==='4'&&S.me.role!=='ผู้ดูแล',g4=mineDoc,rows=sumRows(),need=rows.filter(function(r){return r.s.k!=='off'}),done=need.filter(function(r){return r.g}).length,ok=need.length&&done===need.length,p=g4?planOf(S.w):null;
+function vSum(){S.tab='sum';S.screen='week';var dg=curGrade(),xlOK=dg==='4',mineDoc=upGrades().indexOf(dg)>=0,g4=mineDoc,rows=sumRows(),need=rows.filter(function(r){return r.s.k!=='off'}),done=need.filter(function(r){return r.g}).length,ok=need.length&&done===need.length,p=g4?planG(S.w,dg):null;
  var grid=rows.slice().sort(function(a,b){return a.room.localeCompare(b.room,'th',{numeric:true})}).map(function(r){var k=r.g?'d':r.s.k==='todo'?'p':'n',t=S.me.timetable[r.room]||{};return '<button class="'+k+'" data-dr="'+r.room+'"'+(r.s.k==='wait'||r.s.k==='off'?' disabled':'')+'>'+r.room+'<small>'+(r.g?'✓':r.s.k==='off'?'งด':(DAYS[t.day]||''))+'</small></button>'}).join('');
- var files=!g4?'<div class="hint">'+(curGrade()==='4'?'เอกสาร ป.4 ครูเป้เป็นผู้ดูแล':S.me.role==='ผู้ดูแล'?'เอกสาร ป.'+curGrade()+' ยังไม่พร้อม รออัปโหลดแผน':'เอกสาร ป.'+curGrade()+' พี่ริทเป็นผู้ดูแล')+'</div>':'<div class="card checks">'+['เติมลงฟอร์มจริงของโรงเรียน','ใช้ตารางประเมินเดียวตามแผน','ช่องว่างใส่ "-" ครบ','ไม่เปลี่ยนฟอร์ม ไม่ลบตาราง'].map(function(t){return '<div><i>✓</i><span>'+t+'</span></div>'}).join('')+'</div><div class="lbl">ไฟล์สัปดาห์นี้</div>'+
+ var files=!g4?'<div class="hint">'+(dg==='4'?'เอกสาร ป.4 ครูเป้เป็นผู้ดูแล':'เอกสาร ป.'+dg+' พี่ริทเป็นผู้ดูแล')+'</div>':'<div class="card checks">'+['เติมลงฟอร์มจริงของโรงเรียน','ใช้ตารางประเมินเดียวตามแผน','ช่องว่างใส่ "-" ครบ','ไม่เปลี่ยนฟอร์ม ไม่ลบตาราง'].map(function(t){return '<div><i>✓</i><span>'+t+'</span></div>'}).join('')+'</div><div class="lbl">ไฟล์สัปดาห์นี้</div>'+
  '<div class="card"><div style="font-weight:600;margin-bottom:8px">แผนการสอน สัปดาห์ '+S.w+'</div><div class="fl"><span class="ftag wait">PDF · รอทดลอง</span><button class="ftag keep" id="dW">Word · โหลด</button></div></div>'+
- '<div class="card"><div style="font-weight:600;margin-bottom:8px">บันทึกหลังสอน สัปดาห์ '+S.w+'</div><div class="fl"><span class="ftag wait">PDF · ทำในคอม</span><button class="ftag keep" id="dX">Excel · สร้าง</button></div></div>';
+ '<div class="card"><div style="font-weight:600;margin-bottom:8px">บันทึกหลังสอน สัปดาห์ '+S.w+'</div><div class="fl"><span class="ftag wait">PDF · ทำในคอม</span>'+(xlOK?'<button class="ftag keep" id="dX">Excel · สร้าง</button>':'<span class="ftag wait">Excel · รอฟอร์ม</span>')+'</div></div>';
  $('app').innerHTML=header()+gradeBar()+'<div class="card"><div class="rowb"><b style="font-family:Mitr;font-weight:500">'+(ok?'ข้อมูลครบแล้ว':'ข้อมูลสัปดาห์นี้')+'</b><span style="font-family:\'JetBrains Mono\';font-size:20px;color:'+(ok?'var(--a)':'var(--go)')+'">'+done+'<span style="font-size:13px;color:var(--mute)"> / '+need.length+' ห้อง</span></span></div><div class="rg" style="margin-top:10px">'+grid+'</div><div class="hint" style="margin-top:8px">'+(ok?'ครบทุกห้อง สร้างเอกสารได้เลย':'แตะห้องที่ยังไม่ครบเพื่อเช็คชื่อ · ห้องที่ยังไม่สอนจะใส่ "-" ให้')+'</div></div>'+files+'<button class="btn line sm" id="goPl" style="align-self:flex-start">อัปโหลดแผน / คลังแผน</button><div class="err" id="err"></div>';
  dock((g4?'<button class="btn go" id="dP">ดูตัวอย่างก่อนสร้างไฟล์</button>':'')+tabs());bindWeek();bindTabs();bindGrade();updQ();$('goPl').onclick=function(){vPlans()};
  each('[data-dr]',function(b){b.onclick=function(){var r=b.getAttribute('data-dr');openRoom(r,roomDate(r,S.w))}});
- if(g4){var prev=function(t){S.docTab=t;vDocPrev()};$('dP').onclick=function(){prev('rec')};$('dX').onclick=function(){prev('rec')};
-  $('dW').onclick=function(){if(S.busy)return;var b=this,e=$('err');e.textContent='';b.textContent='กำลังโหลด…';call('planFile',[S.pin,'4',S.w],function(v){b.textContent='Word · โหลด';var a=document.createElement('a');a.href=URL.createObjectURL(new Blob([b64ToBuf(v.b64)],{type:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'}));a.download=v.name;document.body.appendChild(a);a.click();a.remove()},function(){b.textContent='Word · โหลด';$('err').textContent='ยังไม่มีไฟล์แผนสัปดาห์นี้ กด "อัปโหลดแผน" ก่อน'})}}}
-function paperRec(rows,p){var rubric=p&&/รูบริก|คุณภาพ/.test(p.tool),d=S.doc[S.w]||{};var cell=function(r,f){return r.g?f(r.g):'-'},col=rows.map(function(r){return '<th>ป.'+r.room+'</th>'}).join(''),tr=function(lab,f,hl){return '<tr><td>'+lab+'</td>'+rows.map(function(r){var v=f(r);return '<td class="'+(hl&&v!=='-'?'hl':'')+'">'+v+'</td>'}).join('')+'</tr>'},dash=function(){return '-'};
- var head='<h4>บันทึกหลังการจัดการเรียนรู้</h4><div class="meta">วิชาดนตรี ป.4 · '+(p?esc(p.title):'')+' · สัปดาห์ที่ '+S.w+' ('+(p?esc(p.dates):'')+')</div>';
+ if(g4){var prev=function(t){S.docTab=t;vDocPrev()};$('dP').onclick=function(){prev('rec')};if($('dX'))$('dX').onclick=function(){prev('rec')};
+  $('dW').onclick=function(){if(S.busy)return;var b=this,e=$('err');e.textContent='';b.textContent='กำลังโหลด…';call('planFile',[S.pin,dg,S.w],function(v){b.textContent='Word · โหลด';var a=document.createElement('a');a.href=URL.createObjectURL(new Blob([b64ToBuf(v.b64)],{type:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'}));a.download=v.name;document.body.appendChild(a);a.click();a.remove()},function(){b.textContent='Word · โหลด';$('err').textContent='ยังไม่มีไฟล์แผนสัปดาห์นี้ กด "อัปโหลดแผน" ก่อน'})}}}
+function paperRec(rows,p){var rubric=p&&/รูบริก|คุณภาพ/.test(p.tool),d=S.doc[docK()]||{};var cell=function(r,f){return r.g?f(r.g):'-'},col=rows.map(function(r){return '<th>ป.'+r.room+'</th>'}).join(''),tr=function(lab,f,hl){return '<tr><td>'+lab+'</td>'+rows.map(function(r){var v=f(r);return '<td class="'+(hl&&v!=='-'?'hl':'')+'">'+v+'</td>'}).join('')+'</tr>'},dash=function(){return '-'};
+ var head='<h4>บันทึกหลังการจัดการเรียนรู้</h4><div class="meta">วิชาดนตรี ป.'+curGrade()+' · '+(p?esc(p.title):'')+' · สัปดาห์ที่ '+S.w+' ('+(p?esc(p.dates):'')+')</div>';
  var t1=rubric?'<div class="sec">ผลการเรียนรู้ (รูบริก)</div><table><tr><th>รายการ</th>'+col+'</tr>'+tr('นักเรียนทั้งหมด',function(r){return r.g?r.g.n:(S.me.roster[r.room]||[]).length})+tr('ระดับดีมาก (4)',function(r){return cell(r,function(g){return g.a})},1)+tr('ระดับดี (3)',function(r){return cell(r,function(g){return g.b})},1)+tr('ระดับพอใช้ (2)',dash)+tr('ระดับปรับปรุง (1)',dash)+'</table>':'<div class="sec">ผลการเรียนรู้ (แบบสังเกตพฤติกรรม)</div><table><tr><th>รายการ</th>'+col+'</tr>'+tr('นักเรียนทั้งหมด',function(r){return r.g?r.g.n:(S.me.roster[r.room]||[]).length})+tr('ผ่าน',function(r){return cell(r,function(g){return g.n})},1)+tr('ไม่ผ่าน',dash)+tr('แก้ไข',dash)+'</table>';
  var t2=p&&p.attr.length?'<div class="sec">คุณลักษณะอันพึงประสงค์ ('+p.attr.length+' ข้อตามแผน)</div><table><tr><th>ระดับ</th>'+col+'</tr>'+tr('ดีเยี่ยม (3)',function(r){return cell(r,function(g){return g.a})})+tr('ดี (2)',function(r){return cell(r,function(g){return g.b})})+tr('ผ่าน (1)',dash)+'</table>':'';
  return '<div class="paperwrap"><div class="paper">'+head+t1+t2+'<p><b>คุณภาพของแผน:</b> '+esc(d.quality||'-')+'</p><p><b>ปัญหา/อุปสรรค:</b> '+esc(d.problem||'ไม่มี')+' &nbsp; <b>แนวทางแก้ไข:</b> '+esc(d.fix||'-')+'</p></div></div><div class="hint">ช่องสีเหลือง = ตัวเลขจากการเช็คชื่อ · ห้องที่ยังไม่สอนเป็น "-" · เลื่อนตารางไปทางขวาได้ · นี่คือภาพย่อ ไฟล์จริงเติมลงฟอร์มโรงเรียน</div>'}
 function paperPlan(p){if(!p)return '<div class="card hint">ยังไม่มีแผนสัปดาห์นี้</div>';var L=function(a){return (a||[]).map(esc).join('<br>')||'-'};return '<div class="paper" style="min-width:0"><h4>แผนการจัดการเรียนรู้'+(p.planNo?'ที่ '+esc(p.planNo):'')+'</h4><div class="meta">เรื่อง '+esc(p.title)+' · '+esc(p.unit)+' · '+esc(p.dates)+'</div><p class="sec">จุดประสงค์ปลายทาง</p><p>'+L(p.obj)+'</p>'+(p.nav?'<p class="sec">จุดประสงค์นำทาง</p><p>'+L(p.nav)+'</p>':'')+'<p class="sec">เครื่องมือประเมิน</p><p>'+esc(p.tool||'-')+'</p><p class="sec">สื่อการสอน</p><p>'+L(p.media)+'</p><p style="color:#888;font-size:10px">สรุปจากคลังแผน · ไฟล์เต็มโหลดจากปุ่ม Word</p></div>'}
-function vDocPrev(){S.tab='sum';S.screen='docprev';var dt=S.docTab||'rec',g4=true,p=planOf(S.w),rows=sumRows();
+function vDocPrev(){S.tab='sum';S.screen='docprev';var dt=S.docTab||'rec',dg=curGrade(),g4=dg==='4',p=planG(S.w,dg),rows=sumRows();
  var rubric=p&&/รูบริก|คุณภาพ/.test(p.tool);
  var tot={n:0,x:0,a:0,b:0};rows.forEach(function(r){if(r.g){tot.n+=r.g.n;tot.x+=r.g.x;tot.a+=r.g.a;tot.b+=r.g.b}});
  var tr=rows.map(function(r){var g=r.g;if(!g)return '<tr><td>ป.'+r.room+'</td><td colspan="6" class="hint" style="text-align:left">'+(r.s.k==='off'?'งดสอน · '+esc(r.s.why):r.s.k==='wait'?'ยังไม่ถึงวันสอน':'<span style="color:var(--go)">ยังไม่บันทึก</span>')+'</td></tr>';
@@ -508,7 +509,7 @@ function vDocPrev(){S.tab='sum';S.screen='docprev';var dt=S.docTab||'rec',g4=tru
  '<tr><td><b>รวม</b></td><td></td><td>'+(tot.n-tot.x)+'/'+tot.n+'</td><td class="X">'+tot.x+'</td><td class="A">'+tot.a+'</td><td class="B">'+tot.b+'</td><td></td></tr></tbody></table></div>'+
  (notes||'<div class="hint">ไม่มีหมายเหตุ/ปัญหาในสัปดาห์นี้</div>')+map+
  '<div style="display:flex;gap:8px;flex-wrap:wrap">'+(g4&&S.me.sheetUrl?'<button class="btn line sm" id="mk">สร้างชีตสรุปใน Google Sheet</button>':'')+'<button class="btn line sm" id="cp">คัดลอกตาราง</button><button class="btn line sm" id="rf">รีเฟรช</button></div></div></details>';
- dock('<button class="btn go" id="xl"'+(p?'':' disabled')+'>สร้าง Excel บันทึกหลังสอน ส.'+S.w+'</button>'+tabs());bindTabs();$('bk').onclick=function(){vSum()};each('[data-dt]',function(b){b.onclick=function(){S.docTab=b.getAttribute('data-dt');vDocPrev()}});$('rf').onclick=function(){loadWeek();vSum()};if(dt==='rec')bindDoc();updQ();
+ dock('<button class="btn go" id="xl"'+(p&&g4?'':' disabled')+'>'+(g4?'สร้าง Excel บันทึกหลังสอน ส.'+S.w:'Excel ป.'+dg+' · รอฟอร์ม')+'</button>'+tabs());bindTabs();$('bk').onclick=function(){vSum()};each('[data-dt]',function(b){b.onclick=function(){S.docTab=b.getAttribute('data-dt');vDocPrev()}});$('rf').onclick=function(){loadWeek();vSum()};if(dt==='rec')bindDoc();updQ();
  if(g4){$('xl').onclick=function(){makeXlsx(rows)};
  if($('mk'))$('mk').onclick=function(){if(S.busy)return;var b=this;b.textContent='กำลังสร้าง…';
   call('weekSheet',[S.pin,S.w],function(v){b.textContent='สร้างชีตสรุปใน Google Sheet';$('res').innerHTML='<a class="btn line" href="'+esc(v.url)+'" target="_blank">เปิดแผ่น "'+esc(v.name)+'"</a>'},function(){b.textContent='ลองอีกครั้ง'})}}
@@ -527,13 +528,13 @@ var TEACHER='(นายบงการ  จิตต์สว่าง)';
 S.doc={};
 function formRooms(){return S.me.rooms.filter(function(r){return gradeOf(r)==='4'}).sort(function(a,b){return a.localeCompare(b,'th',{numeric:true})})}
 function itemNo(text,names){var m=String(text).match(/\((\d)\.\d+\)/);if(m)return +m[1];for(var i=0;i<names.length;i++)if(String(text).indexOf(names[i])>=0)return i+1;return 0}
-function docDefaults(rows){var p=planOf(S.w)||{media:[]},probs=[],offs={};
+function docDefaults(rows){var p=planG(S.w,curGrade())||{media:[]},probs=[],offs={};
  formRooms().forEach(function(r){var x=rows.filter(function(y){return y.room===r})[0];if(!x)return;
   if(x.g&&x.g.note)probs.push('ป.'+r+' '+x.g.note);
   if(!x.g&&x.s.k==='off'){(offs[x.s.why]=offs[x.s.why]||[]).push('ป.'+r)}});
  Object.keys(offs).forEach(function(k){probs.push(offs[k].join(', ')+' งดเรียน: '+k)});
  return{quality:'ดี',improve:'-',problem:probs.length?probs.join(' / '):'ไม่มี',fix:'-',media:p.media.map(function(m,i){return(i+1)+'. '+m}).join('  ')}}
-function docCard(rows){S.doc=S.doc||{};if(S.doc[S.w]&&!S.doc[S.w].edited)delete S.doc[S.w];var d=S.doc[S.w]||(S.doc[S.w]=docDefaults(rows));
+function docCard(rows){S.doc=S.doc||{};if(S.doc[docK()]&&!S.doc[docK()].edited)delete S.doc[docK()];var d=S.doc[docK()]||(S.doc[docK()]=docDefaults(rows));
  var miss=sumRows().filter(function(r){return !r.g&&r.s.k==='todo'}).map(function(r){return 'ป.'+r.room});
  var f=function(k,lab,ph){var lim=LIM[k];return '<label class="hint" for="doc_'+k+'" style="display:flex;justify-content:space-between"><span>'+lab+'</span><span id="cnt_'+k+'">'+cnt(k,d[k])+'</span></label><textarea id="doc_'+k+'" data-doc="'+k+'" rows="2" placeholder="'+esc(ph||'')+'">'+esc(d[k])+'</textarea>'};
  return '<div class="card plan" style="gap:8px"><div class="h" style="font-size:15px">เอกสารส่ง: บันทึกหลังการสอน (ฟอร์มโรงเรียน)</div>'+
@@ -545,7 +546,7 @@ function docCard(rows){S.doc=S.doc||{};if(S.doc[S.w]&&!S.doc[S.w].edited)delete 
 var LIM={improve:120,problem:70,fix:70,media:140};
 function cnt(k,v){var n=String(v||'').trim().length,l=LIM[k];return '<span style="color:'+(n>l?'var(--x)':'var(--dim)')+'">'+n+'/'+l+(n>l?' ยาวเกิน จะถูกตัดในกระดาษ':'')+'</span>'}
 function splitLine(s,l){s=String(s||'').trim();if(s.length<=l)return[s,''];var cut=s.lastIndexOf(' ',l);if(cut<l*0.6)cut=l;return[s.slice(0,cut).trim(),s.slice(cut).trim()]}
-function bindDoc(){var d=S.doc[S.w];each('[data-doc]',function(t){t.oninput=function(){var k=t.getAttribute('data-doc');d[k]=t.value;d.edited=1;$('cnt_'+k).innerHTML=cnt(k,t.value)}});
+function bindDoc(){var d=S.doc[docK()];each('[data-doc]',function(t){t.oninput=function(){var k=t.getAttribute('data-doc');d[k]=t.value;d.edited=1;$('cnt_'+k).innerHTML=cnt(k,t.value)}});
  each('[data-q]',function(b){b.onclick=function(){d.quality=b.getAttribute('data-q');d.edited=1;each('[data-q]',function(x){x.className='chip'+(x===b?' on':'')})}})}
 
 function cIdx(s){var n=0;for(var i=0;i<s.length;i++)n=n*26+s.charCodeAt(i)-64;return n}
@@ -573,7 +574,7 @@ function setCells(xml,vals){var miss=[],done={};
  if(miss.length)console.warn('ไม่พบแถวสำหรับ',miss);return xml}
 function dash(n){return n?n:'-'}
 /** ค่าทุกช่องของฟอร์ม (ref -> ค่า) */
-function formValues(rows){var p=planOf(S.w),d=(S.doc||{})[S.w]||docDefaults(rows),V={};
+function formValues(rows){var p=planOf(S.w),d=(S.doc||{})[docK()]||docDefaults(rows),V={};
  var rubric=/รูบริก|คุณภาพ/.test(p.tool);
  var um=String(p.unit).match(/หน่วยที่\s*(\d+)\s*(.*)/)||[0,'',p.unit];
  var mon=d2n(S.me.termStart)+(S.w-1)*7,fri=mon+4,a=n2d(mon).split('-'),b=n2d(fri).split('-');
@@ -620,7 +621,7 @@ var RUN_W='<r><rPr><sz val="14"/><color theme="1"/><rFont val="Wingdings"/><char
 function ticks(parts){return{rich:parts.map(function(p){return typeof p==='boolean'?RUN_W+(p?'þ':'o')+'</t></r>':RUN_T+xesc(p)+'</t></r>'}).join('')}}
 var COMP_ROW={1:18,2:19,3:20,4:22,5:24};
 function noProblem(s){s=String(s||'').trim();return !s||s==='-'||s==='ไม่มี'}
-function page2Values(rows){var p=planOf(S.w),d=(S.doc||{})[S.w]||docDefaults(rows),V={};
+function page2Values(rows){var p=planOf(S.w),d=(S.doc||{})[docK()]||docDefaults(rows),V={};
  var attrOn={},compOn={};p.attr.forEach(function(t){var k=itemNo(t,ATTR);if(k)attrOn[k]=1});p.comp.forEach(function(t){var k=itemNo(t,COMP);if(k)compOn[k]=1});
  var rooms=formRooms();
  for(var i=0;i<14;i++){var ac=cIdx('C')+3*i,room=rooms[i];
