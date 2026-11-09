@@ -249,7 +249,7 @@ function parseLine(txt){var out=[],day=null,cur=null,ok=false;
  out.forEach(function(x){x.text=x.text.replace(/\s+$/,'');if(x.text.charAt(0)==='"')x.text=x.text.replace(/^"/,'').replace(/"$/,'').replace(/""/g,'"')});return out}
 function dueOf(t,day){var m=t.match(/(\d{1,2})\s*(ม\.ค|ก\.พ|มี\.ค|เม\.ย|พ\.ค|มิ\.ย|ก\.ค|ส\.ค|ก\.ย|ต\.ค|พ\.ย|ธ\.ค|มกราคม|กุมภาพันธ์|มีนาคม|เมษายน|พฤษภาคม|มิถุนายน|กรกฎาคม|สิงหาคม|กันยายน|ตุลาคม|พฤศจิกายน|ธันวาคม)/);if(!m)return '';
  var d=+m[1],mo=TH_M[m[2]],y=+day.slice(0,4),v=y+'-'+pad2(mo)+'-'+pad2(d);if(d<1||d>31)return '';if(d2n(v)<d2n(day)-60)v=(y+1)+'-'+pad2(mo)+'-'+pad2(d);return v}
-function peopleOf(t,names){var ms=(t.match(/@[^\s@]+/g)||[]).join(' ');return names.filter(function(n){var base=n.replace(/^(ครู|พี่|น้อง)/,''),alias=n==='ครูเป้'?['บงการ','เป้']:[base];
+function peopleOf(t,names){var ms=(t.match(/@[^\s@]+/g)||[]).join(' ').toLowerCase(),al=(S.news&&S.news.aliases)||{};return names.filter(function(n){var base=n.replace(/^(ครู|พี่|น้อง)/,''),alias=[base.toLowerCase()].concat(al[n]||[]);
   return alias.some(function(a){return ms.indexOf(a)>=0})||['ครู','พี่','น้อง'].some(function(p){return t.indexOf(p+base)>=0})})}
 function maskText(t){return t.replace(/\d[\d\- ]{4,}\d/g,'•••')}
 function candidates(all,since,names){var limit=n2d(d2n(S.me.today)-14);return all.filter(function(x){var k=x.day+' '+x.time;return (since?k>since:x.day>=limit)&&x.text.length>=8&&!/^\[[^\]]+\]$/.test(x.text.trim())&&!LN_SKIP.test(x.text)&&LN_KEY.test(x.text)}).slice(-40).reverse().map(function(x,i){
