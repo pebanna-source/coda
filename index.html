@@ -62,6 +62,18 @@ th{font-weight:500;color:var(--mute);font-size:11px;background:var(--card2)}td:f
 td.A{color:var(--a);font-family:'JetBrains Mono';font-weight:700}td.B{color:var(--b);font-family:'JetBrains Mono';font-weight:700}td.X{color:var(--x)}
 .note{font-size:12px;color:var(--mute);border-left:2px solid var(--go);padding-left:8px;line-height:1.5}
 [hidden]{display:none!important}
+
+.tabs{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:0;margin:8px -8px -4px}
+.tabs button{min-height:58px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:11px;color:var(--dim);background:none;border:0;border-radius:0;position:relative}
+.tabs button.on{color:var(--fg);background:none}.tabs button.on svg{stroke:var(--go)}
+.tabs .bdg{position:absolute;top:6px;left:calc(50% + 7px);min-width:16px;height:16px;border-radius:8px;background:var(--go);color:var(--ink);font-family:'JetBrains Mono';font-size:10px;font-weight:700;display:grid;place-items:center;padding:0 4px}
+.alertc{background:var(--goS);border:1px solid rgba(245,197,24,.45);border-radius:14px;padding:12px 14px;display:flex;gap:12px;align-items:center}.alertc b{color:var(--go);font-family:'JetBrains Mono';font-size:24px;line-height:1}
+.lbl{font-size:12px;letter-spacing:.04em;color:var(--mute);font-weight:600;margin-top:4px}
+.tc{display:flex;flex-direction:column;gap:10px}.tc.now{border-color:var(--go);box-shadow:0 0 0 1px var(--go),0 0 28px rgba(245,197,24,.18)}.tc.done{opacity:.72}.tc.ev{background:transparent;border-style:dashed;padding:10px 14px}
+.tc h3{margin:0;font-family:Mitr;font-weight:500;font-size:19px}.rowb{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.pill{font-size:12px;padding:3px 9px;border-radius:999px;border:1px solid var(--line);color:var(--mute);white-space:nowrap}.pill.go{color:var(--ink);background:var(--go);border-color:var(--go)}.pill.ok{color:var(--fg);background:var(--card2)}.pill.warn{color:var(--x);border-color:rgba(255,92,92,.5)}
+.tagA{font-family:'JetBrains Mono';font-weight:700;font-size:12px;padding:2px 7px;border-radius:7px;color:var(--a);background:var(--aS)}.tagB{font-family:'JetBrains Mono';font-weight:700;font-size:12px;padding:2px 7px;border-radius:7px;color:var(--b);background:var(--bS)}
+.task{display:flex;gap:12px;align-items:flex-start}.task .dn{width:50px;text-align:center;flex:none}.task .dn b{display:block;font-family:'JetBrains Mono';font-size:22px;line-height:1.1}.task .dn small{font-size:11px;color:var(--mute)}.task.hot{border-color:var(--go)}.task.hot .dn b{color:var(--go)}
 </style>
 </head>
 <body>
@@ -71,7 +83,7 @@ td.A{color:var(--a);font-family:'JetBrains Mono';font-weight:700}td.B{color:var(
 var LOGO='<svg width="26" height="26" viewBox="0 0 26 26" fill="none" stroke="#F5C518" stroke-width="2"><circle cx="13" cy="13" r="7.5"/><path d="M13 1.5v23M1.5 13h23"/></svg>';
 var DAYS=['','จ.','อ.','พ.','พฤ.','ศ.','ส.','อา.'];
 var MON=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
-var S={pin:'',me:null,w:1,wd:null,tab:'rooms',room:null,date:null,late:0,song:'',note:'',marks:{},hist:[],prev:null,busy:false};
+var S={pin:'',me:null,w:1,wd:null,tab:'today',room:null,date:null,late:0,song:'',note:'',marks:{},hist:[],prev:null,busy:false};
 var $=function(id){return document.getElementById(id)};
 var each=function(sel,fn){Array.prototype.forEach.call(document.querySelectorAll(sel),fn)};
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
@@ -138,7 +150,7 @@ function vPin(){dock(null);$('app').innerHTML='<div class="top"><div class="logo
  $('pin').onkeydown=function(e){if(e.key==='Enter')$('enter').click()};$('pin').focus()}
 
 /* เปิดสัปดาห์: ถ้ามีข้อมูลเก่าในเครื่องขึ้นทันที แล้วอัปเดตจากระบบเบื้องหลัง */
-function showWeek(){if(S.tab==='news'){vNews();return}if(S.tab==='plans'){vPlans();return}S.screen='week';S.tab==='sum'&&isOwner()?vSum():vHome()}
+function showWeek(){if(!S.tab||S.tab==='today'){vToday();return}if(S.tab==='news'){vNews();return}if(S.tab==='plans'){vPlans();return}S.screen='week';S.tab==='sum'&&isOwner()?vSum():vHome()}
 function loadWeek(){fetchNews();var w=S.w,key='coda_wd_'+w,cached=lsJSON(key);
  if(cached){S.wd=cached;mergeQueued();showWeek()}
  else $('app').innerHTML='<div class="hint" style="padding:40px 0;text-align:center">กำลังโหลดสัปดาห์ที่ '+w+'…</div><div class="err" id="err"></div>';
@@ -155,8 +167,10 @@ function bindWeek(){$('wp').onclick=function(){if(S.w>1){S.w--;loadWeek()}};$('w
 function planCard(full){var g=useGradeBar()?curGrade():'4',p=planG(S.w,g);if(!p&&g!=='4')return '<div class="card hint">ยังไม่มีแผน ป.'+g+' ในระบบ · เช็คชื่อได้ตามปกติ</div>';if(!p)return '<div class="card hint">ยังไม่มีแผนของสัปดาห์นี้ในแผ่น "แผนรายสัปดาห์"</div>';
  return '<div class="card plan"><div class="sub">'+(grades().length>1?'ป.'+g+' · ':'')+'แผนที่ '+(p.planNo||p.week)+' · '+esc(p.unit)+'</div><div class="h">'+esc(p.title)+'</div>'+
  (full?'<ul>'+p.obj.map(function(o){return '<li>'+esc(clean(o))+'</li>'}).join('')+'</ul>':'')+'<div class="sub">ประเมินด้วย: '+esc(p.tool||'-')+'</div></div>'}
-function tabs(){return '<div class="tabs"><button id="tR" class="'+(S.tab==='rooms'?'on':'')+'">ห้องเรียน</button>'+(isOwner()?'<button id="tS" class="'+(S.tab==='sum'?'on':'')+'">สรุปสัปดาห์</button>':'')+'<button id="tN" class="'+(S.tab==='news'?'on':'')+'">ข่าว/งาน'+(openCount()?' ('+openCount()+')':'')+'</button>'+(isOwner()?'<button id="tP" class="'+(S.tab==='plans'?'on':'')+'">แผน</button>':'')+'</div>'}
-function bindTabs(){$('tR').onclick=function(){S.screen='week';S.tab='rooms';vHome()};if($('tS'))$('tS').onclick=function(){S.screen='week';S.tab='sum';vSum()};$('tN').onclick=function(){vNews();fetchNews()};if($('tP'))$('tP').onclick=function(){vPlans()}}
+var TAB_IC={t:'<rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M8 3v4M16 3v4M3.5 10h17"/>',c:'<circle cx="9" cy="8" r="3.2"/><path d="M3.5 19c.8-3 3-4.6 5.5-4.6s4.7 1.6 5.5 4.6M15 11l2 2 4-4.5"/>',d:'<path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M9 12h6M9 16h6"/>',n:'<path d="M9 6h11M9 12h11M9 18h11"/><path d="M4 6l1 1 1.8-2M4 12l1 1 1.8-2M4 18l1 1 1.8-2"/>'};
+function tabBtn(id,k,lab,on,extra){return '<button id="'+id+'" class="'+(on?'on':'')+'"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'+TAB_IC[k]+'</svg>'+(extra||'')+'<span>'+lab+'</span></button>'}
+function tabs(){var n=openCount();return '<div class="tabs">'+tabBtn('tT','t','วันนี้',S.tab==='today')+tabBtn('tR','c','เช็คชื่อ',S.tab==='rooms')+(isOwner()?tabBtn('tS','d','เอกสาร',S.tab==='sum'||S.tab==='plans'):'')+tabBtn('tN','n','งาน',S.tab==='news',n?'<span class="bdg" id="nB">'+n+'</span>':'')+'</div>'}
+function bindTabs(){$('tT').onclick=function(){S.tab='today';S.screen='week';if(S.w!==S.me.thisWeek){S.w=S.me.thisWeek;loadWeek()}else vToday()};$('tR').onclick=function(){S.screen='week';S.tab='rooms';vHome()};if($('tS'))$('tS').onclick=function(){S.screen='week';S.tab='sum';vSum()};$('tN').onclick=function(){vNews();fetchNews()}}
 
 /* ---------- หน้าห้องเรียน ---------- */
 function roomState(room){var date=roomDate(room,S.w),g=S.wd.rooms[room],off=offOf(room,date);
@@ -175,7 +189,7 @@ function vHome(){S.tab='rooms';var rooms=shownRooms();var st=rooms.map(function(
  dock(tabs()||null);bindWeek();bindTabs();bindGrade();
  $('rf').onclick=loadWeek;$('out').onclick=function(){if(qGet().length&&!confirm('ยังมีข้อมูลที่ส่งไม่ถึงชีต ออกตอนนี้ข้อมูลนั้นจะหาย ออกเลยไหม?'))return;
   try{Object.keys(localStorage).filter(function(k){return k.indexOf('coda_')===0}).forEach(function(k){localStorage.removeItem(k)})}catch(e){}
-  S={pin:'',me:null,w:1,tab:'rooms',marks:{},hist:[]};vPin()};updQ();
+  S={pin:'',me:null,w:1,tab:'today',marks:{},hist:[]};vPin()};updQ();
  each('.room',function(b){b.onclick=function(){var r=b.getAttribute('data-r'),s=roomState(r);openRoom(r,s.date&&s.date<=S.me.today?s.date:S.me.today)}})}
 
 /* ---------- เช็คชื่อ ---------- */
@@ -232,7 +246,7 @@ function vSaved(v){dock(null);$('app').innerHTML='<div class="ok"><svg width="64
 
 /* ---------- ข่าวและงานจากไลน์ (ทุกคนเห็นข่าวรวม + งานที่ส่งถึงตนเอง · ครูหลัก/ผู้ดูแลเป็นคนลง) ---------- */
 function openCount(){return (S.news&&S.news.items||[]).filter(function(i){return i.type==='งาน'&&i.mine&&i.done.indexOf(S.me.name)<0}).length}
-function updBadge(){var b=$('tN');if(b)b.textContent='ข่าว/งาน'+(openCount()?' ('+openCount()+')':'')}
+function updBadge(){var b=$('nB'),t=$('tN'),n=openCount();if(!t)return;if(n&&!b){b=document.createElement('span');b.className='bdg';b.id='nB';t.insertBefore(b,t.lastChild)}if(b){if(n)b.textContent=n;else b.remove()}if(S.tab==='today'&&S.screen==='week'&&$('app').querySelector('.tc'))vToday()}
 function fetchNews(){rpc('news',[S.pin]).then(function(v){S.news=v;updBadge();if(S.screen==='news'&&!S.nf_dirty)vNews()},function(){})}
 /* ---------- อ่านไฟล์ประวัติแชตไลน์ (อ่านในเครื่องเท่านั้น ลงระบบเฉพาะข้อที่ติ๊ก) ---------- */
 var TH_M={'ม.ค':1,'มกราคม':1,'ก.พ':2,'กุมภาพันธ์':2,'มี.ค':3,'มีนาคม':3,'เม.ย':4,'เมษายน':4,'พ.ค':5,'พฤษภาคม':5,'มิ.ย':6,'มิถุนายน':6,'ก.ค':7,'กรกฎาคม':7,'ส.ค':8,'สิงหาคม':8,'ก.ย':9,'กันยายน':9,'ต.ค':10,'ตุลาคม':10,'พ.ย':11,'พฤศจิกายน':11,'ธ.ค':12,'ธันวาคม':12};
@@ -300,19 +314,21 @@ function vNews(){S.tab='news';S.screen='news';var d=S.news||{items:[],teachers:[
  var meta=function(i){return '<div class="sub">'+(i.due?'ส่ง '+thd(i.due)+' · ':'')+'ลงโดย '+esc(i.by)+' · '+esc(String(i.at).slice(0,10))+'</div>'};
  var del=function(i){return isOwner()?'<button class="btn line sm" data-nd="'+esc(i.id)+'">ลบ</button>':''};
  var card=function(i,act){return '<div class="card" style="gap:6px"><div style="font-family:Mitr;font-size:16px">'+esc(i.title)+'</div>'+(i.detail?'<div class="sub" style="white-space:pre-wrap">'+esc(i.detail)+'</div>':'')+meta(i)+'<div style="display:flex;gap:8px;flex-wrap:wrap">'+(act||'')+del(i)+'</div></div>'};
- var form=!isOwner()?'':'<div class="card" style="display:flex;flex-direction:column;gap:8px"><div style="font-family:Mitr;font-size:16px">ลงข่าว/งานจากไลน์</div>'+
+ var form=!isOwner()?'':'<div class="card" style="display:flex;flex-direction:column;gap:8px"><div style="font-family:Mitr;font-size:16px">กรอกเอง</div>'+
   '<div class="chips">'+['ข่าว','งาน'].map(function(t){return '<button class="chip '+(f.type===t?'on':'')+'" data-nt="'+t+'">'+t+'</button>'}).join('')+'</div>'+
   '<input type="text" id="nT" maxlength="100" placeholder="หัวข้อ" value="'+esc(f.title)+'">'+
   '<textarea id="nD" maxlength="300" rows="3" placeholder="รายละเอียด (วางข้อความจากไลน์แล้วตัดให้สั้น)">'+esc(f.detail)+'</textarea>'+
   (f.type==='งาน'?'<label class="hint" for="nW">วันส่ง (ไม่มีก็เว้นว่าง)</label><input type="date" id="nW" value="'+esc(f.due)+'"><div class="hint">ส่งถึง (เลือกคนที่ถูกแท็กในไลน์)</div><div class="chips">'+d.teachers.map(function(n){return '<button class="chip '+(f.to.indexOf(n)>=0?'on':'')+'" data-nto="'+esc(n)+'">'+esc(n)+'</button>'}).join('')+'</div>':'')+
   '<div class="hint">ห้ามใส่รหัสผ่าน เลขบัตร หรือชื่อ-รหัสนักเรียน</div><div class="err" id="err"></div><button class="btn go" id="nS">ลงให้ทุกคนเห็น</button></div>';
- if(isOwner())form=impCard()+form;
+ var pasteC=isOwner()?impCard():'';
+ var taskCard=function(i,act){var dd=i.due?d2n(i.due)-d2n(S.me.today):null,hot=dd!==null&&dd<=3;return '<div class="card task '+(hot?'hot':'')+'"><div class="dn"><b>'+(dd===null?'–':dd)+'</b><small>'+(dd===null?'ไม่มีวันส่ง':'วัน')+'</small></div><div class="grow" style="display:flex;flex-direction:column;gap:6px"><div style="font-family:Mitr;font-size:16px">'+esc(i.title)+'</div>'+(i.detail&&i.detail!==i.title?'<div class="sub" style="white-space:pre-wrap">'+esc(i.detail)+'</div>':'')+meta(i)+'<div style="display:flex;gap:8px;flex-wrap:wrap">'+act+del(i)+'</div></div></div>'};
  var sec=function(t,a){return a?'<div style="font-family:Mitr;font-size:17px;margin-top:6px">'+t+'</div>'+a:''};
- $('app').innerHTML='<div class="top"><div class="logo grow">'+LOGO+'Coda</div><span class="tag '+(isOwner()?'own':'')+'">'+esc(S.me.role)+'</span><span class="sub">'+esc(me)+'</span></div>'+form+
-  sec('งานของฉัน',mine.map(function(i){var ok=i.done.indexOf(me)>=0;return card(i,'<button class="btn '+(ok?'line':'go')+' sm" data-nk="'+esc(i.id)+'" data-v="'+(ok?0:1)+'">'+(ok?'✓ เสร็จแล้ว (แตะเพื่อยกเลิก)':'ทำเสร็จแล้ว')+'</button>')}).join(''))+
+ $('app').innerHTML='<div class="top"><div class="logo grow">'+LOGO+'Coda</div><span class="tag '+(isOwner()?'own':'')+'">'+esc(S.me.role)+'</span><span class="sub">'+esc(me)+'</span></div>'+pasteC+
+  sec('ใกล้ถึงกำหนด',mine.filter(function(i){return i.done.indexOf(me)<0}).map(function(i){var ok=false;return taskCard(i,'<button class="btn '+(ok?'line':'go')+' sm" data-nk="'+esc(i.id)+'" data-v="'+(ok?0:1)+'">'+(ok?'✓ เสร็จแล้ว (แตะเพื่อยกเลิก)':'ทำเสร็จแล้ว')+'</button>')}).join(''))+
   sec('ข่าวสำคัญ',news.map(function(i){return card(i)}).join(''))+
   sec('งานที่ลงให้คนอื่น',sent.map(function(i){return card(i,'<span class="sub">ส่งถึง '+esc(i.to.join(', '))+' · เสร็จ '+i.done.length+'/'+i.to.length+'</span>')}).join(''))+
-  (!mine.length&&!news.length&&!sent.length?'<div class="hint" style="text-align:center;padding:24px 0">ยังไม่มีข่าวหรืองาน</div>':'')+(isOwner()?'':'<div class="err" id="err"></div>');
+  sec('เสร็จแล้ว',mine.filter(function(i){return i.done.indexOf(me)>=0}).map(function(i){return card(i,'<button class="btn line sm" data-nk="'+esc(i.id)+'" data-v="0">✓ เสร็จแล้ว (แตะเพื่อยกเลิก)</button>')}).join(''))+
+  (!mine.length&&!news.length&&!sent.length?'<div class="hint" style="text-align:center;padding:24px 0">ยังไม่มีข่าวหรืองาน</div>':'')+form+(isOwner()?'':'<div class="err" id="err"></div>');
  dock(tabs());bindTabs();
  var wr=function(fn,args){if(S.busy)return;S.nf_dirty=false;call(fn,args,function(v){S.news=v;vNews()})};
  if(isOwner()){bindImp();var dirty=function(){S.nf_dirty=true};
@@ -382,6 +398,33 @@ function vPlans(){S.tab='plans';S.screen='plans';var P=plState(),top='<div class
  $('pF').onchange=function(){var file=this.files[0],e=$('err');if(!file)return;if(!/\.docx$/i.test(file.name)){e.textContent=/\.doc$/i.test(file.name)?'ไฟล์ .doc ต้อง Save As เป็น .docx ก่อน':'รับเฉพาะไฟล์ .docx';return}if(file.size>10485760){e.textContent='ไฟล์ใหญ่เกิน 10 MB';return}
   e.textContent='กำลังอ่าน…';var r=new FileReader();r.onload=function(){JSZip.loadAsync(r.result).then(function(z){var d=z.file('word/document.xml');if(!d)throw new Error('x');return d.async('string')}).then(function(xml){var f=parsePlanXml(xml);f.fileName=file.name;f.b64=bufB64(r.result);if(upGrades().indexOf(f.grade)<0)f.grade=P.grade;P.form=f;vPlans()},function(){var m=$('err');if(m)m.textContent='อ่านไฟล์ไม่ได้ ต้องเป็นไฟล์ Word .docx'})};r.readAsArrayBuffer(file)}}
 
+/* ---------- วันนี้ ---------- */
+var PERIODS=[['08.40','09.30'],['09.30','10.20'],['10.20','11.10'],['11.10','12.00'],['12.00','12.50'],['12.50','13.40'],['13.40','14.30'],['14.30','15.20']];
+var PE_EVENTS={1:[['เช้า','07.30–08.40','ซ้อมวงสตริง ม.1']],2:[[5,'','ซ้อมวงสตริงรวมประถมปลาย']],3:[['เช้า','07.30–08.40','ซ้อมวงสตริง ม.1']],4:[['เช้า','07.30–08.40','ซ้อมวงสตริงรวมประถมปลาย'],[3,'','ประชุมกลุ่มสาระศิลปะ'],[5,'','ซ้อมวงสตริง ป.6/2']],5:[['เช้า','07.30–08.40','ซ้อมวงสตริงรวมประถมปลาย'],[5,'','ซ้อมวงสตริง ป.6/6']]};
+function nowMin(){var d=new Date();return d.getHours()*60+d.getMinutes()}
+function pMin(t){var p=t.split('.');return +p[0]*60+ +p[1]}
+function vToday(){S.tab='today';S.screen='week';var me=S.me,today=me.today,dw=dow(today),now=nowMin();
+ var rooms=me.rooms.filter(function(r){var t=me.timetable[r];return t&&t.day===dw}).sort(function(a,b){return (parseInt(me.timetable[a].period,10)||99)-(parseInt(me.timetable[b].period,10)||99)});
+ var firstOpen=null,items=rooms.map(function(r){var st=roomState(r),p=parseInt(me.timetable[r].period,10)||0,T=PERIODS[p-1]||['',''],state=st.k==='done'?'done':st.k==='off'?'off':(T[0]&&now<pMin(T[0])?'before':(T[1]&&now>pMin(T[1])?'late':'now'));if(!firstOpen&&(state==='now'||state==='late'))firstOpen=r;return{r:r,st:st,p:p,T:T,state:state}});
+ if(firstOpen)items.forEach(function(x){x.hot=x.state==='now'||(x.r===firstOpen&&!items.some(function(y){return y.state==='now'}))});
+ var nDone=items.filter(function(x){return x.state==='done'}).length,nOff=items.filter(function(x){return x.state==='off'}).length,nLate=items.filter(function(x){return x.state==='late'}).length;
+ var card=function(x){var r=x.r,g=x.st.g,pill=x.state==='done'?'<span class="pill ok">✓ เช็คแล้ว</span>':x.state==='off'?'<span class="pill">งดสอน</span>':x.state==='late'?'<span class="pill warn">เลยคาบ ยังไม่เช็ค</span>':x.state==='now'?'<span class="pill go">กำลังสอน</span>':'<span class="pill">ยังไม่ถึงคาบ</span>';
+  var body=x.state==='done'?'<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap"><span class="tagA">A '+g.a+'</span><span class="tagB">B '+g.b+'</span><span class="sub">โดย '+esc(g.by)+'</span></div><button class="btn line sm" data-tr="'+r+'">แก้ไข</button>':x.state==='off'?'<div class="sub">'+esc(x.st.why||'')+'</div>':'<button class="btn '+(x.hot?'go':'line')+'" data-tr="'+r+'">'+(x.hot?'เช็คชื่อเลย':'เช็คชื่อ')+'</button>';
+  var by=(me.timetable[r].by&&isOwner())?' · '+esc(me.timetable[r].by):'';
+  return '<div class="card tc '+(x.hot?'now':'')+' '+(x.state==='done'?'done':'')+'"><div class="rowb"><h3>ป.'+r+'</h3>'+pill+'</div><div class="sub">คาบ '+x.p+(x.T[0]?' · '+x.T[0]+'–'+x.T[1]:'')+by+'</div>'+body+'</div>'};
+ var ev=me.name==='ครูเป้'?(PE_EVENTS[dw]||[]):[];
+ var evCard=function(e){return '<div class="card tc ev"><div class="sub">'+(e[0]==='เช้า'?e[1]:'คาบ '+e[0]+' · '+PERIODS[e[0]-1].join('–'))+'</div><div>'+esc(e[2])+'</div></div>'};
+ var rows=[];ev.filter(function(e){return e[0]==='เช้า'}).forEach(function(e){rows.push(evCard(e))});
+ for(var p=0;p<=9;p++){items.filter(function(x){return (x.p||9)===p}).forEach(function(x){rows.push(card(x))});ev.filter(function(e){return e[0]===p}).forEach(function(e){rows.push(evCard(e))})}
+ var alerts='';if(isOwner()){var left=(4-dw+7)%7;alerts+='<div class="alertc"><b>'+(left||'วันนี้')+'</b><div><div style="font-weight:600">'+(left?'วัน ':'')+'ส่งแผน + บันทึก ส.'+me.thisWeek+'</div><div class="hint">ทุกพฤหัสหลังสอน</div></div></div>'}
+ var job=(S.news&&S.news.items||[]).filter(function(i){return i.type==='งาน'&&i.mine&&i.done.indexOf(me.name)<0&&i.due&&d2n(i.due)>=d2n(today)&&d2n(i.due)-d2n(today)<=3}).sort(function(a,b){return a.due.localeCompare(b.due)})[0];
+ if(job){var dd=d2n(job.due)-d2n(today);alerts+='<div class="alertc" id="aJob"><b>'+(dd||'วันนี้')+'</b><div><div style="font-weight:600">'+(dd?'วัน · ':'')+esc(job.title)+'</div><div class="hint">งานจากไลน์</div></div></div>'}
+ $('app').innerHTML='<div class="top"><div class="logo grow">'+LOGO+'Coda</div><span class="sub" style="font-family:\'JetBrains Mono\'">'+DAYS[dw]+' '+thd(today)+'</span></div>'+alerts+
+ '<div class="rowb"><div class="lbl">วันนี้ของ'+esc(me.name)+'</div><div class="sub">เช็คแล้ว '+nDone+'/'+(rooms.length-nOff)+(nLate?' · ค้าง '+nLate:'')+(nOff?' · งด '+nOff:'')+'</div></div>'+
+ (rows.length?rows.join(''):'<div class="hint" style="text-align:center;padding:32px 0">วันนี้ไม่มีคาบ</div>')+'<div class="err" id="err"></div>';
+ dock(tabs());bindTabs();each('[data-tr]',function(b){b.onclick=function(){openRoom(b.getAttribute('data-tr'),today)}});
+ if($('aJob'))$('aJob').onclick=function(){vNews();fetchNews()}}
+
 /* ---------- สรุปสัปดาห์ (ครูหลัก) ---------- */
 function sumRows(){return shownRooms().map(function(r){var s=roomState(r);return{room:r,s:s,g:s.g}})}
 function vSum(){S.tab='sum';var g4=curGrade()==='4',p=g4?planOf(S.w):null,rows=sumRows();
@@ -398,8 +441,8 @@ function vSum(){S.tab='sum';var g4=curGrade()==='4',p=g4?planOf(S.w):null,rows=s
  '<tr><td><b>รวม</b></td><td></td><td>'+(tot.n-tot.x)+'/'+tot.n+'</td><td class="X">'+tot.x+'</td><td class="A">'+tot.a+'</td><td class="B">'+tot.b+'</td><td></td></tr></tbody></table></div>'+
  (notes||'<div class="hint">ไม่มีหมายเหตุ/ปัญหาในสัปดาห์นี้</div>')+map+(g4?docCard(rows):'')+
  '<div class="err" id="err"></div><div id="res"></div>'+
- '<div style="display:flex;gap:8px;flex-wrap:wrap">'+(g4&&S.me.sheetUrl?'<button class="btn line sm" id="mk">สร้างชีตสรุปใน Google Sheet</button>':'')+'<button class="btn line sm" id="cp">คัดลอกตาราง</button><button class="btn line sm" id="rf">รีเฟรช</button></div>';
- dock((g4?'<button class="btn go" id="xl"'+(p?'':' disabled')+'>สร้าง Excel บันทึกหลังสอน ส.'+S.w+'</button>':'')+tabs());bindWeek();bindTabs();bindGrade();$('rf').onclick=loadWeek;if(g4)bindDoc();updQ();
+ '<button class="btn line sm" id="goPl" style="align-self:flex-start">อัปโหลดแผน / คลังแผน</button><div style="display:flex;gap:8px;flex-wrap:wrap">'+(g4&&S.me.sheetUrl?'<button class="btn line sm" id="mk">สร้างชีตสรุปใน Google Sheet</button>':'')+'<button class="btn line sm" id="cp">คัดลอกตาราง</button><button class="btn line sm" id="rf">รีเฟรช</button></div>';
+ dock((g4?'<button class="btn go" id="xl"'+(p?'':' disabled')+'>สร้าง Excel บันทึกหลังสอน ส.'+S.w+'</button>':'')+tabs());bindWeek();bindTabs();bindGrade();$('goPl').onclick=function(){vPlans()};$('rf').onclick=loadWeek;if(g4)bindDoc();updQ();
  if(g4){$('xl').onclick=function(){makeXlsx(rows)};
  if($('mk'))$('mk').onclick=function(){if(S.busy)return;var b=this;b.textContent='กำลังสร้าง…';
   call('weekSheet',[S.pin,S.w],function(v){b.textContent='สร้างชีตสรุปใน Google Sheet';$('res').innerHTML='<a class="btn line" href="'+esc(v.url)+'" target="_blank">เปิดแผ่น "'+esc(v.name)+'"</a>'},function(){b.textContent='ลองอีกครั้ง'})}}
@@ -564,7 +607,7 @@ function start(){var pin=lsGet('coda_pin'),me=lsJSON('coda_me');
  if(!pin||!me){vPin();return}
  S.pin=pin;S.me=me;S.me.today=todayLocal();S.me.thisWeek=weekOf(S.me.today);S.w=Math.max(1,S.me.thisWeek);loadWeek();flush();
  rpc('login',[pin]).then(function(v){S.me=v;lsSet('coda_me',JSON.stringify(v))},
-  function(e){if(isNet(e))return;/* PIN ถูกเปลี่ยน/ปิด -> ออกจากระบบ */lsSet('coda_pin',null);lsSet('coda_me',null);alert('ต้องเข้าระบบใหม่: '+errText(e));S={pin:'',me:null,w:1,tab:'rooms',marks:{},hist:[]};vPin()})}
+  function(e){if(isNet(e))return;/* PIN ถูกเปลี่ยน/ปิด -> ออกจากระบบ */lsSet('coda_pin',null);lsSet('coda_me',null);alert('ต้องเข้าระบบใหม่: '+errText(e));S={pin:'',me:null,w:1,tab:'today',marks:{},hist:[]};vPin()})}
 start();
 </script>
 </body>
