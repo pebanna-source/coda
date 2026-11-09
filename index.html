@@ -53,7 +53,7 @@ input.pin{font-family:'JetBrains Mono';font-size:28px;letter-spacing:.4em;text-a
 .xl{font-family:'JetBrains Mono';font-weight:700;font-size:12px;color:var(--x);min-height:32px;display:grid;place-items:center;border:1px solid rgba(255,92,92,.35);border-radius:9px}
 .hint{font-size:12px;color:var(--mute);line-height:1.5}.err{color:var(--x);font-size:14px;min-height:20px}
 .dock{position:fixed;left:0;right:0;bottom:0;padding:12px 16px calc(12px + env(safe-area-inset-bottom));background:rgba(14,15,17,.95);border-top:1px solid var(--line)}.dock .in{max-width:428px;margin:0 auto;display:flex;flex-direction:column;gap:8px}
-.tabs{display:grid;grid-template-columns:1fr 1fr;gap:6px}.tabs button{min-height:44px;border-radius:12px;border:1px solid var(--line);font-family:Mitr;font-weight:500}.tabs .on{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.tabs{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:6px}.tabs button{min-height:44px;font-size:14px;padding:0 2px;border-radius:12px;border:1px solid var(--line);font-family:Mitr;font-weight:500}.tabs .on{background:var(--fg);color:var(--bg);border-color:var(--fg)}
 .ok{text-align:center;padding:20px 0}.ok h2{font-family:Mitr;font-weight:500;margin:6px 0}
 .trio{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.trio div{border:1px solid var(--line);border-radius:14px;padding:12px;background:var(--card)}.trio .v{font-family:'JetBrains Mono';font-size:28px;font-weight:700}
 .tbl{overflow-x:auto;border:1px solid var(--line);border-radius:14px}
@@ -110,7 +110,8 @@ function dow(s){var d=new Date(d2n(s)*864e5).getUTCDay();return d===0?7:d}
 function weekOf(s){return Math.floor((d2n(s)-d2n(S.me.termStart))/7)+1}
 function roomDate(room,w){var t=S.me.timetable[room];return t&&t.day?n2d(d2n(S.me.termStart)+(w-1)*7+t.day-1):''}
 function offOf(room,date){if(!date)return null;var o=S.me.off.filter(function(o){return o.date===date&&(!o.rooms.length||o.rooms.indexOf(room)>=0)});return o[0]||null}
-function planOf(w){return S.me.plans.filter(function(p){return p.week===w})[0]||null}
+function planG(w,g){return S.me.plans.filter(function(p){return p.week===w&&String(p.grade||'4')===g})[0]||null}
+function planOf(w){return planG(w,'4')}
 function clean(s){return String(s).replace(/^[-•\s]+/,'')}
 function sortedRooms(){var tt=S.me.timetable,k=function(r){var t=tt[r]||{};return (t.day||9)*100+(parseInt(t.period,10)||99)};return S.me.rooms.slice().sort(function(a,b){return k(a)-k(b)||a.localeCompare(b,"th",{numeric:true})})}
 /* ครูหลัก + ผู้ดูแล เห็นทุกหน้า · การตั้งค่าและลิงก์ชีตอยู่ที่ครูหลักคนเดียว (Apps Script กันอีกชั้น) */
@@ -123,7 +124,7 @@ function curGrade(){var a=grades();return S.grade&&a.indexOf(S.grade)>=0?S.grade
 function shownRooms(){var g=curGrade();return useGradeBar()?sortedRooms().filter(function(r){return gradeOf(r)===g}):sortedRooms()}
 function gradeBar(){return useGradeBar()?'<div class="chips" id="gb">'+grades().map(function(g){return '<button class="chip '+(curGrade()===g?'on':'')+'" data-g="'+g+'">ป.'+g+'</button>'}).join('')+'</div>':''}
 function bindGrade(){each('[data-g]',function(b){b.onclick=function(){S.grade=b.getAttribute('data-g');S.tab==='sum'?vSum():vHome()}})}
-function planFor(w,room){return gradeOf(room)==='4'?planOf(w):null}
+function planFor(w,room){return planG(w,gradeOf(room))}
 /* ครูแทนย้อนวันได้ภายในสัปดาห์นี้เท่านั้น (Apps Script กันซ้ำอีกชั้น) */
 function weekMin(){return isOwner()?'':n2d(d2n(S.me.termStart)+(S.me.thisWeek-1)*7)}
 
@@ -137,7 +138,7 @@ function vPin(){dock(null);$('app').innerHTML='<div class="top"><div class="logo
  $('pin').onkeydown=function(e){if(e.key==='Enter')$('enter').click()};$('pin').focus()}
 
 /* เปิดสัปดาห์: ถ้ามีข้อมูลเก่าในเครื่องขึ้นทันที แล้วอัปเดตจากระบบเบื้องหลัง */
-function showWeek(){if(S.tab==='news'){vNews();return}S.screen='week';S.tab==='sum'&&isOwner()?vSum():vHome()}
+function showWeek(){if(S.tab==='news'){vNews();return}if(S.tab==='plans'){vPlans();return}S.screen='week';S.tab==='sum'&&isOwner()?vSum():vHome()}
 function loadWeek(){fetchNews();var w=S.w,key='coda_wd_'+w,cached=lsJSON(key);
  if(cached){S.wd=cached;mergeQueued();showWeek()}
  else $('app').innerHTML='<div class="hint" style="padding:40px 0;text-align:center">กำลังโหลดสัปดาห์ที่ '+w+'…</div><div class="err" id="err"></div>';
@@ -151,11 +152,11 @@ function mergeQueued(){qGet().forEach(function(it){var d=it.data;if(d.date<S.wd.
 function header(){var me=S.me;return '<div class="top"><div class="logo grow">'+LOGO+'Coda</div><span class="tag '+(isOwner()?'own':'')+'">'+esc(me.role)+'</span><span class="sub">'+esc(me.name)+'</span></div>'+
  '<div class="card wk"><button class="btn line sm" id="wp"'+(S.w<=1||(!isOwner()&&S.w<=me.thisWeek)?' disabled':'')+'>‹</button><div class="t"><b>สัปดาห์ที่ '+S.w+(S.w===me.thisWeek?' · นี้':'')+'</b><span class="sub">'+thd(S.wd.from)+' – '+thd(S.wd.to)+'</span></div><button class="btn line sm" id="wn"'+(S.w>=Math.max(me.thisWeek,1)+1?' disabled':'')+'>›</button></div><div class="qs sub" style="text-align:center;min-height:0"></div>'}
 function bindWeek(){$('wp').onclick=function(){if(S.w>1){S.w--;loadWeek()}};$('wn').onclick=function(){S.w++;loadWeek()}}
-function planCard(full){if(useGradeBar()&&curGrade()!=='4')return '<div class="card hint">ยังไม่มีแผน ป.'+curGrade()+' ในระบบ · เช็คชื่อได้ตามปกติ</div>';var p=planOf(S.w);if(!p)return '<div class="card hint">ยังไม่มีแผนของสัปดาห์นี้ในแผ่น "แผนรายสัปดาห์"</div>';
- return '<div class="card plan"><div class="sub">'+(grades().length>1?'ป.4 · ':'')+'แผนที่ '+p.week+' · '+esc(p.unit)+'</div><div class="h">'+esc(p.title)+'</div>'+
+function planCard(full){var g=useGradeBar()?curGrade():'4',p=planG(S.w,g);if(!p&&g!=='4')return '<div class="card hint">ยังไม่มีแผน ป.'+g+' ในระบบ · เช็คชื่อได้ตามปกติ</div>';if(!p)return '<div class="card hint">ยังไม่มีแผนของสัปดาห์นี้ในแผ่น "แผนรายสัปดาห์"</div>';
+ return '<div class="card plan"><div class="sub">'+(grades().length>1?'ป.'+g+' · ':'')+'แผนที่ '+(p.planNo||p.week)+' · '+esc(p.unit)+'</div><div class="h">'+esc(p.title)+'</div>'+
  (full?'<ul>'+p.obj.map(function(o){return '<li>'+esc(clean(o))+'</li>'}).join('')+'</ul>':'')+'<div class="sub">ประเมินด้วย: '+esc(p.tool||'-')+'</div></div>'}
-function tabs(){return '<div class="tabs"><button id="tR" class="'+(S.tab==='rooms'?'on':'')+'">ห้องเรียน</button>'+(isOwner()?'<button id="tS" class="'+(S.tab==='sum'?'on':'')+'">สรุปสัปดาห์</button>':'')+'<button id="tN" class="'+(S.tab==='news'?'on':'')+'">ข่าว/งาน'+(openCount()?' ('+openCount()+')':'')+'</button></div>'}
-function bindTabs(){$('tR').onclick=function(){S.screen='week';S.tab='rooms';vHome()};if($('tS'))$('tS').onclick=function(){S.screen='week';S.tab='sum';vSum()};$('tN').onclick=function(){vNews();fetchNews()}}
+function tabs(){return '<div class="tabs"><button id="tR" class="'+(S.tab==='rooms'?'on':'')+'">ห้องเรียน</button>'+(isOwner()?'<button id="tS" class="'+(S.tab==='sum'?'on':'')+'">สรุปสัปดาห์</button>':'')+'<button id="tN" class="'+(S.tab==='news'?'on':'')+'">ข่าว/งาน'+(openCount()?' ('+openCount()+')':'')+'</button>'+(isOwner()?'<button id="tP" class="'+(S.tab==='plans'?'on':'')+'">แผน</button>':'')+'</div>'}
+function bindTabs(){$('tR').onclick=function(){S.screen='week';S.tab='rooms';vHome()};if($('tS'))$('tS').onclick=function(){S.screen='week';S.tab='sum';vSum()};$('tN').onclick=function(){vNews();fetchNews()};if($('tP'))$('tP').onclick=function(){vPlans()}}
 
 /* ---------- หน้าห้องเรียน ---------- */
 function roomState(room){var date=roomDate(room,S.w),g=S.wd.rooms[room],off=offOf(room,date);
@@ -310,6 +311,59 @@ function vNews(){S.tab='news';S.screen='news';var d=S.news||{items:[],teachers:[
    if(S.busy)return;call('newsAdd',[S.pin,f],function(v){S.news=v;S.nf=null;S.nf_dirty=false;vNews()})};
   each('[data-nd]',function(b){b.onclick=function(){if(confirm('ลบรายการนี้สำหรับทุกคน?'))wr('newsDel',[S.pin,b.getAttribute('data-nd')])}})}
  each('[data-nk]',function(b){b.onclick=function(){wr('newsDone',[S.pin,b.getAttribute('data-nk'),b.getAttribute('data-v')==='1'])}})}
+
+/* ---------- อัปโหลดแผน .docx: อ่านในเครื่อง ตรวจแล้วค่อยยืนยัน ---------- */
+function docxLines(xml){return (xml.match(/<w:p[ >][\s\S]*?<\/w:p>/g)||[]).map(function(p){return (p.match(/<w:t(?: [^>]*)?>[^<]*<\/w:t>/g)||[]).map(function(t){return t.replace(/<[^>]+>/g,'')}).join('')
+  .replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&apos;/g,"'").replace(/[​‌‍﻿]/g,'').replace(/\s+/g,' ').trim()}).filter(String)}
+function secBetween(L,from,to){var i=-1;for(var k=0;k<L.length;k++)if(from.test(L[k])){i=k;break}if(i<0)return[];var o=[];for(var j=i+1;j<L.length&&!to.test(L[j]);j++)o.push(L[j]);return o}
+function dashOff(a){return a.map(function(s){return s.replace(/^[-•\s]+/,'').trim()}).filter(String)}
+function parsePlanXml(xml){var L=docxLines(xml),all=L.join('\n'),m,f={grade:'',week:'',planNo:'',unit:'',title:'',dates:'',obj:[],nav:[],comp:[],attr:[],tool:'',media:[]};
+ if(m=all.match(/หน่วยการเรียนรู้ที่\s*(\d+)\s*เรื่อง\s*(.+?)\s*เวลา/))f.unit='หน่วยที่ '+m[1]+' '+m[2];
+ if(m=all.match(/แผนการจัดการเรียนรู้ที่\s*(\d+)\s*เรื่อง\s*(.+?)\s*(?:คาบที่|เวลา|\n)/)){f.planNo=m[1];f.title=m[2]}
+ if(m=all.match(/ประถมศึกษาปีที่\s*(\d)/))f.grade=m[1];
+ if(m=all.match(/สัปดาห์ที่\s*(\d+)/))f.week=m[1];
+ if(m=all.match(/สัปดาห์ที่\s*\d+\s*วันที่\s*([^\n]+)/))f.dates=m[1].trim();
+ f.obj=dashOff(secBetween(L,/^จุดประสงค์ปลายทาง/,/^จุดประสงค์นำทาง/));
+ f.nav=dashOff(secBetween(L,/^จุดประสงค์นำทาง/,/^สาระสำคัญ/));
+ f.comp=dashOff(secBetween(L,/^สมรรถนะสำคัญ/,/^คุณลักษณะ/));
+ f.attr=dashOff(secBetween(L,/^คุณลักษณะ/,/^ค่านิยม|^กิจกรรมการเรียนรู้/));
+ f.tool=dashOff(secBetween(L,/^เครื่องมือ/,/^เกณฑ์/)).join(' / ');
+ var med=dashOff(secBetween(L,/^สื่อการเรียนรู้$/,/^แหล่งการเรียนรู้/)),qr=med.filter(function(s){return /QR/i.test(s)});
+ f.media=(qr.length?qr:med).map(function(s){return s.replace(/\s*\([^()]*QR[^()]*\)\s*/gi,' ').trim()}).filter(function(s,i,a){return s&&a.indexOf(s)===i});
+ return f}
+
+var PL_WEEKS=19;
+function upGrades(){return S.me.role==='ผู้ดูแล'?['5','6']:['4','5','6']}
+function bufB64(buf){var u=new Uint8Array(buf),s='',n=0x8000;for(var i=0;i<u.length;i+=n)s+=String.fromCharCode.apply(null,u.subarray(i,i+n));return btoa(s)}
+function plState(){return S.pl||(S.pl={list:null,form:null,grade:upGrades()[0]})}
+function plField(k,lab,area){var f=S.pl.form,v=f[k];if(Array.isArray(v))v=v.join('\n');var empty=!String(v||'').trim();var st=empty?' style="border-color:var(--x)"':'';
+ return '<label class="hint" for="pf_'+k+'">'+lab+(empty?' <span style="color:var(--x)">อ่านไม่พบ กรอกเอง</span>':'')+'</label>'+(area?'<textarea id="pf_'+k+'" data-pf="'+k+'" rows="'+Math.min(6,Math.max(2,String(v).split('\n').length+1))+'"'+st+'>'+esc(v)+'</textarea>':'<input type="text" id="pf_'+k+'" data-pf="'+k+'" value="'+esc(v)+'"'+st+'>')}
+function vPlans(){S.tab='plans';S.screen='plans';var P=plState(),top='<div class="top"><div class="logo grow">'+LOGO+'Coda</div><span class="tag own">'+esc(S.me.role)+'</span><span class="sub">'+esc(S.me.name)+'</span></div>';
+ if(P.form){var f=P.form,gs=upGrades();
+  $('app').innerHTML=top+'<div class="card" style="display:flex;flex-direction:column;gap:8px"><div style="font-family:Mitr;font-size:17px">ตรวจแผนก่อนยืนยัน</div><div class="sub">'+esc(f.fileName)+'</div>'+
+  '<div class="hint">ชั้น</div><div class="chips">'+gs.map(function(g){return '<button class="chip '+(f.grade===g?'on':'')+'" data-pg="'+g+'">ป.'+g+'</button>'}).join('')+'</div>'+
+  plField('week','สัปดาห์ที่')+plField('planNo','แผนที่')+plField('unit','หน่วย')+plField('title','เรื่อง')+plField('dates','วันที่')+
+  plField('obj','จุดประสงค์ปลายทาง (บรรทัดละข้อ · ลงฟอร์มบันทึกหลังสอน)',1)+plField('nav','จุดประสงค์นำทาง K/P/A (บรรทัดละข้อ)',1)+plField('tool','เครื่องมือประเมิน')+plField('attr','คุณลักษณะ (บรรทัดละข้อ)',1)+plField('comp','สมรรถนะ (บรรทัดละข้อ)',1)+plField('media','สื่อการสอน (บรรทัดละข้อ)',1)+
+  '<div class="err" id="err"></div><button class="btn go" id="pS">ยืนยันเก็บแผน</button><button class="btn line sm" id="pX">ยกเลิก</button></div>';
+  dock(tabs());bindTabs();
+  each('[data-pf]',function(el){el.oninput=function(){var k=el.getAttribute('data-pf');f[k]=el.value}});
+  each('[data-pg]',function(b){b.onclick=function(){f.grade=b.getAttribute('data-pg');vPlans()}});
+  $('pX').onclick=function(){P.form=null;vPlans()};
+  $('pS').onclick=function(){var e=$('err'),w=parseInt(f.week,10);if(gs.indexOf(f.grade)<0){e.textContent='เลือกชั้นก่อน';return}if(!(w>=1&&w<=40)){e.textContent='สัปดาห์ไม่ถูกต้อง';return}if(!String(f.title).trim()){e.textContent='ใส่ชื่อเรื่องก่อน';return}
+   var ln=function(v){return (Array.isArray(v)?v:String(v).split('\n')).map(function(x){return String(x).trim()}).filter(String)};
+   var meta={grade:f.grade,week:w,planNo:String(f.planNo).trim(),unit:String(f.unit).trim(),title:String(f.title).trim(),dates:String(f.dates).trim(),obj:ln(f.obj),nav:ln(f.nav),comp:ln(f.comp),attr:ln(f.attr),tool:String(f.tool).trim(),media:ln(f.media)};
+   if(S.busy)return;var b=this;b.textContent='กำลังเก็บ…';call('planSave',[S.pin,meta,f.b64,f.fileName],function(v){S.me.plans=v.plans;lsSet('coda_me',JSON.stringify(S.me));P.list=v.list;P.grade=f.grade;P.form=null;vPlans()},function(){b.textContent='ลองอีกครั้ง'})};
+  return}
+ var byW={};(P.list||[]).filter(function(x){return x.grade===P.grade}).forEach(function(x){byW[x.week]=x});
+ var rows='';for(var w=1;w<=PL_WEEKS;w++){var x=byW[w],old=planG(w,P.grade);rows+='<div class="card" style="gap:4px"><div style="display:flex;justify-content:space-between;gap:8px;align-items:center"><div class="grow"><b>ส.'+w+'</b> '+esc(x?x.title:old?old.title:'')+'<div class="sub">'+(x?'อัปโหลดโดย '+esc(x.by)+' · '+esc(x.at)+(x.old?' · รุ่นเก่า '+x.old:''):old?'แผนเดิมในระบบ ยังไม่มีไฟล์':'<span style="color:var(--go)">ยังไม่มีแผน</span>')+'</div></div>'+(x&&x.hasFile?'<button class="btn line sm" data-pd="'+w+'">โหลด</button>':'')+'</div></div>'}
+ $('app').innerHTML=top+'<div class="card" style="display:flex;flex-direction:column;gap:8px"><div style="font-family:Mitr;font-size:17px">อัปโหลดแผนการสอน</div><div class="hint">รับไฟล์ Word (.docx) · ถ้าเป็น .doc ให้ Save As ก่อน · แอปอ่านให้แล้วตรวจก่อนยืนยัน</div><input type="file" id="pF" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"><div class="err" id="err"></div></div>'+
+ '<div style="font-family:Mitr;font-size:17px;margin-top:6px">คลังแผน</div><div class="chips">'+['4','5','6'].map(function(g){return '<button class="chip '+(P.grade===g?'on':'')+'" data-pl="'+g+'">ป.'+g+'</button>'}).join('')+'</div>'+(P.list?rows:'<div class="hint">กำลังโหลด…</div>');
+ dock(tabs());bindTabs();
+ if(!P.list)rpc('planList',[S.pin]).then(function(v){P.list=v;if(S.screen==='plans'&&!P.form)vPlans()},function(e){var m=$('err');if(m)m.textContent=errText(e);P.list=[]});
+ each('[data-pl]',function(b){b.onclick=function(){P.grade=b.getAttribute('data-pl');vPlans()}});
+ each('[data-pd]',function(b){b.onclick=function(){if(S.busy)return;b.textContent='…';call('planFile',[S.pin,P.grade,+b.getAttribute('data-pd')],function(v){b.textContent='โหลด';var a=document.createElement('a');a.href=URL.createObjectURL(new Blob([b64ToBuf(v.b64)],{type:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'}));a.download=v.name;document.body.appendChild(a);a.click();a.remove()},function(){b.textContent='โหลด'})}});
+ $('pF').onchange=function(){var file=this.files[0],e=$('err');if(!file)return;if(!/\.docx$/i.test(file.name)){e.textContent=/\.doc$/i.test(file.name)?'ไฟล์ .doc ต้อง Save As เป็น .docx ก่อน':'รับเฉพาะไฟล์ .docx';return}if(file.size>10485760){e.textContent='ไฟล์ใหญ่เกิน 10 MB';return}
+  e.textContent='กำลังอ่าน…';var r=new FileReader();r.onload=function(){JSZip.loadAsync(r.result).then(function(z){var d=z.file('word/document.xml');if(!d)throw new Error('x');return d.async('string')}).then(function(xml){var f=parsePlanXml(xml);f.fileName=file.name;f.b64=bufB64(r.result);if(upGrades().indexOf(f.grade)<0)f.grade=P.grade;P.form=f;vPlans()},function(){e.textContent='อ่านไฟล์ไม่ได้ ต้องเป็นไฟล์ Word .docx'})};r.readAsArrayBuffer(file)}}
 
 /* ---------- สรุปสัปดาห์ (ครูหลัก) ---------- */
 function sumRows(){return shownRooms().map(function(r){var s=roomState(r);return{room:r,s:s,g:s.g}})}
