@@ -146,7 +146,7 @@ function isOwner(){return S.me.role==='ครูหลัก'||S.me.role==='ผ�
 function gradeOf(r){return String(r).split('/')[0]}
 function grades(){var o=[];S.me.rooms.forEach(function(r){var g=gradeOf(r);if(o.indexOf(g)<0)o.push(g)});return o.sort()}
 function useGradeBar(){return isOwner()&&grades().length>1}
-function curGrade(){var a=grades();return S.grade&&a.indexOf(S.grade)>=0?S.grade:(a.indexOf('4')>=0?'4':a[0])}
+function curGrade(){var a=grades(),own=S.me.role==='ผู้ดูแล'?'5':'4';return S.grade&&a.indexOf(S.grade)>=0?S.grade:(a.indexOf(own)>=0?own:a[0])}
 function shownRooms(){var g=curGrade();return useGradeBar()?sortedRooms().filter(function(r){return gradeOf(r)===g}):sortedRooms()}
 function gradeBar(){return useGradeBar()?'<div class="chips" id="gb">'+grades().map(function(g){return '<button class="chip '+(curGrade()===g?'on':'')+'" data-g="'+g+'">ป.'+g+'</button>'}).join('')+'</div>':''}
 function bindGrade(){each('[data-g]',function(b){b.onclick=function(){S.grade=b.getAttribute('data-g');S.tab==='sum'?vSum():vHome()}})}
@@ -381,7 +381,7 @@ function parsePlanXml(xml){var L=docxLines(xml),all=L.join('\n'),m,f={grade:'',w
  return f}
 
 var PL_WEEKS=19;
-function upGrades(){return S.me.role==='ผู้ดูแล'?['5','6']:['4','5','6']}
+function upGrades(){return S.me.role==='ผู้ดูแล'?['5','6']:['4']}
 function bufB64(buf){var u=new Uint8Array(buf),s='',n=0x8000;for(var i=0;i<u.length;i+=n)s+=String.fromCharCode.apply(null,u.subarray(i,i+n));return btoa(s)}
 function plState(){return S.pl||(S.pl={list:null,form:null,grade:upGrades()[0]})}
 function plField(k,lab,area){var f=S.pl.form,v=f[k];if(Array.isArray(v))v=v.join('\n');var empty=!String(v||'').trim();var st=empty?' style="border-color:var(--x)"':'';
@@ -416,7 +416,7 @@ function vPlans(){S.tab='plans';S.screen='plans';var P=plState(),top='<div class
  each('[data-pl]',function(b){b.onclick=function(){P.grade=b.getAttribute('data-pl');vPlans()}});
  bindPlL();
  $('pF').onchange=function(){var file=this.files[0],e=$('err');if(!file)return;if(!/\.docx$/i.test(file.name)){e.textContent=/\.doc$/i.test(file.name)?'ไฟล์ .doc ต้อง Save As เป็น .docx ก่อน':'รับเฉพาะไฟล์ .docx';return}if(file.size>10485760){e.textContent='ไฟล์ใหญ่เกิน 10 MB';return}
-  e.textContent='กำลังอ่าน…';var r=new FileReader();r.onload=function(){JSZip.loadAsync(r.result).then(function(z){var d=z.file('word/document.xml');if(!d)throw new Error('x');return d.async('string')}).then(function(xml){var f=parsePlanXml(xml);f.fileName=file.name;f.b64=bufB64(r.result);if(upGrades().indexOf(f.grade)<0)f.grade=P.grade;P.form=f;vPlans()},function(){var m=$('err');if(m)m.textContent='อ่านไฟล์ไม่ได้ ต้องเป็นไฟล์ Word .docx'})};r.readAsArrayBuffer(file)}}
+  e.textContent='กำลังอ่าน…';var r=new FileReader();r.onload=function(){JSZip.loadAsync(r.result).then(function(z){var d=z.file('word/document.xml');if(!d)throw new Error('x');return d.async('string')}).then(function(xml){var f=parsePlanXml(xml);f.fileName=file.name;f.b64=bufB64(r.result);if(upGrades().indexOf(f.grade)<0)f.grade=upGrades()[0];P.form=f;vPlans()},function(){var m=$('err');if(m)m.textContent='อ่านไฟล์ไม่ได้ ต้องเป็นไฟล์ Word .docx'})};r.readAsArrayBuffer(file)}}
 
 /* ---------- วันนี้ ---------- */
 var PERIODS=[['08.40','09.30'],['09.30','10.20'],['10.20','11.10'],['11.10','12.00'],['12.00','12.50'],['12.50','13.40'],['13.40','14.30'],['14.30','15.20']];
@@ -432,11 +432,11 @@ function vToday(){S.tab='today';S.screen='week';var me=S.me,today=me.today,dw=do
   var body=x.state==='done'?'<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap"><span class="tagA">A '+g.a+'</span><span class="tagB">B '+g.b+'</span><span class="sub">โดย '+esc(g.by)+'</span></div><button class="btn line sm" data-tr="'+r+'">แก้ไข</button>':x.state==='off'?'<div class="sub">'+esc(x.st.why||'')+'</div>':'<button class="btn '+(x.hot?'go':'line')+'" data-tr="'+r+'">'+(x.hot?'เช็คชื่อเลย':'เช็คชื่อ')+'</button>';
   var by=(me.timetable[r].by&&isOwner())?' · '+esc(me.timetable[r].by):'';
   return '<div class="card tc '+(x.hot?'now':'')+' '+(x.state==='done'?'done':'')+'"><div class="rowb"><h3>ป.'+r+'</h3>'+pill+'</div><div class="sub">คาบ '+x.p+(x.T[0]?' · '+x.T[0]+'–'+x.T[1]:'')+by+'</div>'+body+'</div>'};
- var ev=me.name==='ครูเป้'?(PE_EVENTS[dw]||[]):[];
+ var ev=(me.name==='ครูเป้'||me.name==='พี่ริท')?(PE_EVENTS[dw]||[]):[];
  var evCard=function(e){return '<div class="card tc ev"><div class="sub">'+(e[0]==='เช้า'?e[1]:'คาบ '+e[0]+' · '+PERIODS[e[0]-1].join('–'))+'</div><div>'+esc(e[2])+'</div></div>'};
  var rows=[];ev.filter(function(e){return e[0]==='เช้า'}).forEach(function(e){rows.push(evCard(e))});
  for(var p=0;p<=9;p++){items.filter(function(x){return (x.p||9)===p}).forEach(function(x){rows.push(card(x))});ev.filter(function(e){return e[0]===p}).forEach(function(e){rows.push(evCard(e))})}
- var alerts='';if(isOwner()){var left=(4-dw+7)%7;alerts+='<div class="alertc"><b>'+(left||'วันนี้')+'</b><div><div style="font-weight:600">'+(left?'วัน ':'')+'ส่งแผน + บันทึก ส.'+me.thisWeek+'</div><div class="hint">ทุกพฤหัสหลังสอน</div></div></div>'}
+ var alerts='';if(isOwner()){var left=(4-dw+7)%7;alerts+='<div class="alertc"><b>'+(left||'วันนี้')+'</b><div><div style="font-weight:600">'+(left?'วัน ':'')+'ส่งแผน + บันทึก '+(me.role==='ผู้ดูแล'?'ป.5–6':'ป.4')+' ส.'+me.thisWeek+'</div><div class="hint">ทุกพฤหัสหลังสอน</div></div></div>'}
  var job=(S.news&&S.news.items||[]).filter(function(i){return i.type==='งาน'&&i.mine&&i.done.indexOf(me.name)<0&&i.due&&d2n(i.due)>=d2n(today)&&d2n(i.due)-d2n(today)<=3}).sort(function(a,b){return a.due.localeCompare(b.due)})[0];
  if(job){var dd=d2n(job.due)-d2n(today);alerts+='<div class="alertc" id="aJob"><b>'+(dd||'วันนี้')+'</b><div><div style="font-weight:600">'+(dd?'วัน · ':'')+esc(job.title)+'</div><div class="hint">งานจากไลน์</div></div></div>'}
  $('app').innerHTML='<div class="top"><div class="logo grow">'+LOGO+'Coda</div><span class="sub" style="font-family:\'JetBrains Mono\'">'+DAYS[dw]+' '+thd(today)+'</span><button class="btn line sm" id="goT" aria-label="ภาพรวมเทอม" style="padding:0 10px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.5"/></svg></button></div>'+alerts+
@@ -452,7 +452,7 @@ function termGrid(rooms,tw){var me=S.me,head='<tr><th class="rm" style="z-index:
  var list=rooms.slice().sort(function(a,b){return a.localeCompare(b,'th',{numeric:true})});
  var body=list.map(function(r){var cells='',dn=0,all=0;for(var w=1;w<=PL_WEEKS;w++){var c=termCell(r,w);if(c.k!=='none'&&c.k!=='off')all++;if(c.k==='done')dn++;var tap=(c.k==='done'||c.k==='miss'||c.k==='now')&&(isOwner()||w===tw);cells+='<td><div class="cl '+c.k+'"'+(tap?' data-cl="'+r+'|'+c.d+'" role="button" tabindex="0"':'')+'>'+(c.t||'')+'</div></td>'}return '<tr><td class="rm"><b>'+r+'</b><small>'+dn+'/'+all+'</small></td>'+cells+'</tr>'}).join('');
  return '<div class="hint">ตัวเลขในช่อง = วันที่สอน · แตะช่องเพื่อเปิดเช็คชื่อวันนั้น · เลื่อนซ้าย-ขวาดูทั้งเทอม</div><div class="termw" id="tw"><table class="term"><thead>'+head+'</thead><tbody>'+body+'</tbody></table></div><div class="legend"><span><i class="cl done"></i>เช็คแล้ว</span><span><i class="cl now"></i>รอเช็ควันนี้</span><span><i class="cl miss"></i>เลยวันแล้ว ยังไม่เช็ค</span><span><i class="cl fut"></i>ยังไม่ถึง</span><span><i class="cl off"></i>งดสอน</span></div>'}
-function vTerm(){S.tab='today';S.screen='term';var me=S.me,gs=grades();if(gs.indexOf(S.tg)<0)S.tg=gs.indexOf('4')>=0?'4':gs[0];var tw=me.thisWeek;S.tw=S.tw||tw;var w=S.tw;
+function vTerm(){S.tab='today';S.screen='term';var me=S.me,gs=grades();if(gs.indexOf(S.tg)<0)S.tg=curGrade();var tw=me.thisWeek;S.tw=S.tw||tw;var w=S.tw;
  var rooms=me.rooms.filter(function(r){return gradeOf(r)===S.tg}),mon=function(k){return n2d(d2n(me.termStart)+(k-1)*7)};
  var mode=S.tmode||lsGet('coda_tmode')||'week';S.tmode=mode;
  var top='<div class="top"><button class="btn line sm" id="bk">‹</button><div class="grow"><div style="font-family:Mitr;font-weight:500;font-size:20px">ภาพรวมเทอม</div><div class="sub">เทอม 2/2569 · ตอนนี้สัปดาห์ '+tw+' จาก '+PL_WEEKS+'</div></div></div>'+(gs.length>1?'<div class="chips">'+gs.map(function(g){return '<button class="chip '+(S.tg===g?'on':'')+'" data-tg="'+g+'">ป.'+g+'</button>'}).join('')+'</div>':'')+'<div class="seg"><button class="'+(mode==='week'?'on':'')+'" data-tm="week">รายสัปดาห์</button><button class="'+(mode==='grid'?'on':'')+'" data-tm="grid">ทั้งเทอม</button></div>';
@@ -472,9 +472,9 @@ function vTerm(){S.tab='today';S.screen='term';var me=S.me,gs=grades();if(gs.ind
 
 /* ---------- สรุปสัปดาห์ (ครูหลัก) ---------- */
 function sumRows(){return shownRooms().map(function(r){var s=roomState(r);return{room:r,s:s,g:s.g}})}
-function vSum(){S.tab='sum';S.screen='week';var g4=curGrade()==='4',rows=sumRows(),need=rows.filter(function(r){return r.s.k!=='off'}),done=need.filter(function(r){return r.g}).length,ok=need.length&&done===need.length,p=g4?planOf(S.w):null;
+function vSum(){S.tab='sum';S.screen='week';var mineDoc=curGrade()==='4'&&S.me.role!=='ผู้ดูแล',g4=mineDoc,rows=sumRows(),need=rows.filter(function(r){return r.s.k!=='off'}),done=need.filter(function(r){return r.g}).length,ok=need.length&&done===need.length,p=g4?planOf(S.w):null;
  var grid=rows.slice().sort(function(a,b){return a.room.localeCompare(b.room,'th',{numeric:true})}).map(function(r){var k=r.g?'d':r.s.k==='todo'?'p':'n',t=S.me.timetable[r.room]||{};return '<button class="'+k+'" data-dr="'+r.room+'"'+(r.s.k==='wait'||r.s.k==='off'?' disabled':'')+'>'+r.room+'<small>'+(r.g?'✓':r.s.k==='off'?'งด':(DAYS[t.day]||''))+'</small></button>'}).join('');
- var files=!g4?'<div class="hint">เอกสาร ป.'+curGrade()+' ยังไม่พร้อม รอแผนจากพี่ริท</div>':'<div class="card checks">'+['เติมลงฟอร์มจริงของโรงเรียน','ใช้ตารางประเมินเดียวตามแผน','ช่องว่างใส่ "-" ครบ','ไม่เปลี่ยนฟอร์ม ไม่ลบตาราง'].map(function(t){return '<div><i>✓</i><span>'+t+'</span></div>'}).join('')+'</div><div class="lbl">ไฟล์สัปดาห์นี้</div>'+
+ var files=!g4?'<div class="hint">'+(curGrade()==='4'?'เอกสาร ป.4 ครูเป้เป็นผู้ดูแล':S.me.role==='ผู้ดูแล'?'เอกสาร ป.'+curGrade()+' ยังไม่พร้อม รออัปโหลดแผน':'เอกสาร ป.'+curGrade()+' พี่ริทเป็นผู้ดูแล')+'</div>':'<div class="card checks">'+['เติมลงฟอร์มจริงของโรงเรียน','ใช้ตารางประเมินเดียวตามแผน','ช่องว่างใส่ "-" ครบ','ไม่เปลี่ยนฟอร์ม ไม่ลบตาราง'].map(function(t){return '<div><i>✓</i><span>'+t+'</span></div>'}).join('')+'</div><div class="lbl">ไฟล์สัปดาห์นี้</div>'+
  '<div class="card"><div style="font-weight:600;margin-bottom:8px">แผนการสอน สัปดาห์ '+S.w+'</div><div class="fl"><span class="ftag wait">PDF · รอทดลอง</span><button class="ftag keep" id="dW">Word · โหลด</button></div></div>'+
  '<div class="card"><div style="font-weight:600;margin-bottom:8px">บันทึกหลังสอน สัปดาห์ '+S.w+'</div><div class="fl"><span class="ftag wait">PDF · ทำในคอม</span><button class="ftag keep" id="dX">Excel · สร้าง</button></div></div>';
  $('app').innerHTML=header()+gradeBar()+'<div class="card"><div class="rowb"><b style="font-family:Mitr;font-weight:500">'+(ok?'ข้อมูลครบแล้ว':'ข้อมูลสัปดาห์นี้')+'</b><span style="font-family:\'JetBrains Mono\';font-size:20px;color:'+(ok?'var(--a)':'var(--go)')+'">'+done+'<span style="font-size:13px;color:var(--mute)"> / '+need.length+' ห้อง</span></span></div><div class="rg" style="margin-top:10px">'+grid+'</div><div class="hint" style="margin-top:8px">'+(ok?'ครบทุกห้อง สร้างเอกสารได้เลย':'แตะห้องที่ยังไม่ครบเพื่อเช็คชื่อ · ห้องที่ยังไม่สอนจะใส่ "-" ให้')+'</div></div>'+files+'<button class="btn line sm" id="goPl" style="align-self:flex-start">อัปโหลดแผน / คลังแผน</button><div class="err" id="err"></div>';
