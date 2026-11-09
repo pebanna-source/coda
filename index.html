@@ -114,6 +114,17 @@ function planOf(w){return S.me.plans.filter(function(p){return p.week===w})[0]||
 function clean(s){return String(s).replace(/^[-•\s]+/,'')}
 function sortedRooms(){var tt=S.me.timetable,k=function(r){var t=tt[r]||{};return (t.day||9)*100+(parseInt(t.period,10)||99)};return S.me.rooms.slice().sort(function(a,b){return k(a)-k(b)||a.localeCompare(b,"th",{numeric:true})})}
 function isOwner(){return S.me.role==='ครูหลัก'}
+/* ชั้นเรียน: ครูหลักสลับ ป.4/5/6 ด้วยแถบบนหน้า · ครูแทนเห็นทุกห้องของตนในรายการเดียว */
+function gradeOf(r){return String(r).split('/')[0]}
+function grades(){var o=[];S.me.rooms.forEach(function(r){var g=gradeOf(r);if(o.indexOf(g)<0)o.push(g)});return o.sort()}
+function useGradeBar(){return isOwner()&&grades().length>1}
+function curGrade(){var a=grades();return S.grade&&a.indexOf(S.grade)>=0?S.grade:(a.indexOf('4')>=0?'4':a[0])}
+function shownRooms(){var g=curGrade();return useGradeBar()?sortedRooms().filter(function(r){return gradeOf(r)===g}):sortedRooms()}
+function gradeBar(){return useGradeBar()?'<div class="chips" id="gb">'+grades().map(function(g){return '<button class="chip '+(curGrade()===g?'on':'')+'" data-g="'+g+'">ป.'+g+'</button>'}).join('')+'</div>':''}
+function bindGrade(){each('[data-g]',function(b){b.onclick=function(){S.grade=b.getAttribute('data-g');S.tab==='sum'?vSum():vHome()}})}
+function planFor(w,room){return gradeOf(room)==='4'?planOf(w):null}
+/* ครูแทนย้อนวันได้ภายในสัปดาห์นี้เท่านั้น (Apps Script กันซ้ำอีกชั้น) */
+function weekMin(){return isOwner()?'':n2d(d2n(S.me.termStart)+(S.me.thisWeek-1)*7)}
 
 /* ---------- PIN ---------- */
 function vPin(){dock(null);$('app').innerHTML='<div class="top"><div class="logo">'+LOGO+'Coda</div><span class="sub">จบคาบ จบงาน</span></div>'+
@@ -137,10 +148,10 @@ function mergeQueued(){qGet().forEach(function(it){var d=it.data;if(d.date<S.wd.
 
 /* ---------- ส่วนหัว + สัปดาห์ ---------- */
 function header(){var me=S.me;return '<div class="top"><div class="logo grow">'+LOGO+'Coda</div><span class="tag '+(isOwner()?'own':'')+'">'+esc(me.role)+'</span><span class="sub">'+esc(me.name)+'</span></div>'+
- '<div class="card wk"><button class="btn line sm" id="wp"'+(S.w<=1?' disabled':'')+'>‹</button><div class="t"><b>สัปดาห์ที่ '+S.w+(S.w===me.thisWeek?' · นี้':'')+'</b><span class="sub">'+thd(S.wd.from)+' – '+thd(S.wd.to)+'</span></div><button class="btn line sm" id="wn"'+(S.w>=Math.max(me.thisWeek,1)+1?' disabled':'')+'>›</button></div><div class="qs sub" style="text-align:center;min-height:0"></div>'}
+ '<div class="card wk"><button class="btn line sm" id="wp"'+(S.w<=1||(!isOwner()&&S.w<=me.thisWeek)?' disabled':'')+'>‹</button><div class="t"><b>สัปดาห์ที่ '+S.w+(S.w===me.thisWeek?' · นี้':'')+'</b><span class="sub">'+thd(S.wd.from)+' – '+thd(S.wd.to)+'</span></div><button class="btn line sm" id="wn"'+(S.w>=Math.max(me.thisWeek,1)+1?' disabled':'')+'>›</button></div><div class="qs sub" style="text-align:center;min-height:0"></div>'}
 function bindWeek(){$('wp').onclick=function(){if(S.w>1){S.w--;loadWeek()}};$('wn').onclick=function(){S.w++;loadWeek()}}
-function planCard(full){var p=planOf(S.w);if(!p)return '<div class="card hint">ยังไม่มีแผนของสัปดาห์นี้ในแผ่น "แผนรายสัปดาห์"</div>';
- return '<div class="card plan"><div class="sub">แผนที่ '+p.week+' · '+esc(p.unit)+'</div><div class="h">'+esc(p.title)+'</div>'+
+function planCard(full){if(useGradeBar()&&curGrade()!=='4')return '<div class="card hint">ยังไม่มีแผน ป.'+curGrade()+' ในระบบ · เช็คชื่อได้ตามปกติ</div>';var p=planOf(S.w);if(!p)return '<div class="card hint">ยังไม่มีแผนของสัปดาห์นี้ในแผ่น "แผนรายสัปดาห์"</div>';
+ return '<div class="card plan"><div class="sub">'+(grades().length>1?'ป.4 · ':'')+'แผนที่ '+p.week+' · '+esc(p.unit)+'</div><div class="h">'+esc(p.title)+'</div>'+
  (full?'<ul>'+p.obj.map(function(o){return '<li>'+esc(clean(o))+'</li>'}).join('')+'</ul>':'')+'<div class="sub">ประเมินด้วย: '+esc(p.tool||'-')+'</div></div>'}
 function tabs(){return isOwner()?'<div class="tabs"><button id="tR" class="'+(S.tab==='rooms'?'on':'')+'">ห้องเรียน</button><button id="tS" class="'+(S.tab==='sum'?'on':'')+'">สรุปสัปดาห์</button></div>':''}
 function bindTabs(){if(!isOwner())return;$('tR').onclick=function(){S.tab='rooms';vHome()};$('tS').onclick=function(){S.tab='sum';vSum()}}
@@ -148,18 +159,18 @@ function bindTabs(){if(!isOwner())return;$('tR').onclick=function(){S.tab='rooms
 /* ---------- หน้าห้องเรียน ---------- */
 function roomState(room){var date=roomDate(room,S.w),g=S.wd.rooms[room],off=offOf(room,date);
  if(g)return{k:'done',date:g.date,g:g};if(off)return{k:'off',date:date,why:off.why};if(date&&date>S.me.today)return{k:'wait',date:date};return{k:'todo',date:date}}
-function vHome(){S.tab='rooms';var rooms=sortedRooms();var st=rooms.map(function(r){return roomState(r)});
+function vHome(){S.tab='rooms';var rooms=shownRooms();var st=rooms.map(function(r){return roomState(r)});
  var need=st.filter(function(s){return s.k!=='off'&&s.k!=='wait'}).length,done=st.filter(function(s){return s.k==='done'}).length;
  var list=rooms.map(function(r,i){var s=st[i],t=S.me.timetable[r]||{},d=s.date;
   var who=t.by?esc(t.by):'';var line,num='';
   if(s.k==='done'){line='✓ บันทึกแล้ว · '+esc(s.g.by);num='<span style="color:var(--a)">A '+s.g.a+'</span><br><span style="color:var(--b)">B '+s.g.b+'</span>'+(s.g.x?'<br><span style="color:var(--x)">ขาด '+s.g.x+'</span>':'')}
   else if(s.k==='off')line='งดสอน · '+esc(s.why);else if(s.k==='wait')line='ยังไม่ถึงวันสอน';else line='ยังไม่เช็คชื่อ';
   return '<button class="room '+s.k+'" data-r="'+r+'"'+(s.k==='wait'?' disabled':'')+'><div class="d"><b>'+(d?DAYS[dow(d)]:'–')+'</b><small>'+thd(d)+'</small></div><div class="grow"><div class="r">ป.'+r+'</div><div class="s">'+line+(who&&isOwner()?' · <span style="color:var(--dim)">'+who+'</span>':'')+'</div></div><div class="n">'+num+'</div></button>'}).join('');
- $('app').innerHTML=header()+planCard(false)+
+ $('app').innerHTML=header()+gradeBar()+planCard(false)+
  '<div style="display:flex;justify-content:space-between" class="sub"><span>บันทึกแล้ว '+done+'/'+need+' ห้อง</span><span>'+(isOwner()?'ข้อมูลครูแทนเข้ามาที่นี่ทันที':'แตะห้องที่สอนแทน')+'</span></div><div class="prog"><i style="width:'+(need?Math.round(done/need*100):0)+'%"></i></div>'+
  list+'<div class="err" id="err"></div>'+
  '<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn line sm" id="rf">รีเฟรช</button>'+(S.me.sheetUrl?'<a class="btn line sm" href="'+esc(S.me.sheetUrl)+'" target="_blank">เปิด Google Sheet</a>':'')+'<button class="btn line sm" id="out">ออกจากระบบ</button></div>';
- dock(tabs()||null);bindWeek();bindTabs();
+ dock(tabs()||null);bindWeek();bindTabs();bindGrade();
  $('rf').onclick=loadWeek;$('out').onclick=function(){if(qGet().length&&!confirm('ยังมีข้อมูลที่ส่งไม่ถึงชีต ออกตอนนี้ข้อมูลนั้นจะหาย ออกเลยไหม?'))return;
   try{Object.keys(localStorage).filter(function(k){return k.indexOf('coda_')===0}).forEach(function(k){localStorage.removeItem(k)})}catch(e){}
   S={pin:'',me:null,w:1,tab:'rooms',marks:{},hist:[]};vPin()};updQ();
@@ -176,12 +187,12 @@ function openRoom(r,date){S.room=r;S.date=date;S.marks={};S.late=0;S.song='';S.n
  call('load',[S.pin,r,date],function(v){if(v){S.marks=v.marks;S.late=Number(v.late)||0;S.song=v.song||'';S.note=v.note||'';S.prev={by:v.by,at:v.at}}vCheck()})}
 function count(){var L=S.me.roster[S.room],x=0,b=0;L.forEach(function(s){var m=S.marks[s.no];if(m==='x')x++;else if(m==='B')b++});return{n:L.length,p:L.length-x,a:L.length-x-b,b:b+x,x:x}}
 function snap(){S.hist.push(JSON.stringify({m:S.marks,l:S.late}));if(S.hist.length>40)S.hist.shift()}
-function vCheck(){var L=S.me.roster[S.room],c=count(),w=weekOf(S.date),p=planOf(w),off=offOf(S.room,S.date);
+function vCheck(){var L=S.me.roster[S.room],c=count(),w=weekOf(S.date),p=planFor(w,S.room),off=offOf(S.room,S.date);
  var kids=L.map(function(s){var m=S.marks[s.no]||'A';var lab=s.nick||s.name;
   return '<div class="kid '+(m==='x'?'x':m==='B'?'B':'')+'"><button class="nm" data-k="'+s.no+'" title="'+esc(s.name)+'"><i class="dot"></i><span>'+esc(lab)+'</span><span class="no">'+s.no+'</span></button>'+
   (m==='x'?'<div class="xl">ขาด · B</div>':'<div class="ab"><button class="'+(m==='B'?'':'onA')+'" data-l="'+s.no+'" data-v="A">A</button><button class="'+(m==='B'?'onB':'')+'" data-l="'+s.no+'" data-v="B">B</button></div>')+'</div>'}).join('');
  var lates=[[0,'ตรงเวลา'],[5,'ช้า 5'],[10,'ช้า 10'],[15,'ช้า 15'],[20,'ช้า 20+']];
- $('app').innerHTML='<div class="top"><button class="btn line sm" id="back">‹</button><div class="grow"><div style="font-family:Mitr;font-size:20px">ป.'+S.room+'</div><div class="sub" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">สัปดาห์ที่ '+w+(p?' · '+esc(p.title):'')+'</div></div><input type="date" id="d" value="'+S.date+'" max="'+S.me.today+'" style="width:150px;min-height:40px"></div>'+
+ $('app').innerHTML='<div class="top"><button class="btn line sm" id="back">‹</button><div class="grow"><div style="font-family:Mitr;font-size:20px">ป.'+S.room+'</div><div class="sub" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">สัปดาห์ที่ '+w+(p?' · '+esc(p.title):'')+'</div></div><input type="date" id="d" value="'+S.date+'"'+(weekMin()?' min="'+weekMin()+'"':'')+' max="'+S.me.today+'" style="width:150px;min-height:40px"></div>'+
  (off?'<div class="note">วันนี้อยู่ในวันงดสอน: '+esc(off.why)+' — ถ้าสอนจริงก็บันทึกได้</div>':'')+
  (S.prev?'<div class="note">บันทึกล่าสุดโดย '+esc(S.prev.by)+' · '+esc(S.prev.at)+' — กดบันทึกอีกครั้งจะแทนที่ของเดิม</div>':'')+
  '<div class="stats"><div class="stat"><div class="k">มา</div><div class="v">'+c.p+'<span style="font-size:13px;color:var(--mute)">/'+c.n+'</span></div></div><div class="stat"><div class="k">ระดับ A</div><div class="v" style="color:var(--a)">'+c.a+'</div></div><div class="stat"><div class="k">ระดับ B</div><div class="v" style="color:var(--b)">'+c.b+'</div></div></div>'+
@@ -194,7 +205,7 @@ function vCheck(){var L=S.me.roster[S.room],c=count(),w=weekOf(S.date),p=planOf(
  '<div class="err" id="err"></div>';
  dock('<button class="btn go" id="save">บันทึก ป.'+S.room+' · '+thd(S.date)+'</button>');
  $('back').onclick=function(){loadWeek()};$('song').oninput=function(){S.song=this.value};$('note').oninput=function(){S.note=this.value};
- $('d').onchange=function(){if(this.value&&this.value<=S.me.today)openRoom(S.room,this.value)};
+ $('d').onchange=function(){if(this.value&&this.value<=S.me.today&&this.value>=weekMin())openRoom(S.room,this.value)};
  $('allin').onclick=function(){snap();Object.keys(S.marks).forEach(function(k){if(S.marks[k]==='x')delete S.marks[k]});vCheck()};
  $('allA').onclick=function(){snap();Object.keys(S.marks).forEach(function(k){if(S.marks[k]==='B')delete S.marks[k]});vCheck()};
  $('undo').onclick=function(){if(!S.hist.length)return;var h=JSON.parse(S.hist.pop());S.marks=h.m;S.late=h.l;vCheck()};
@@ -218,8 +229,8 @@ function vSaved(v){dock(null);$('app').innerHTML='<div class="ok"><svg width="64
  updQ();$('next').onclick=function(){S.w=v.week;loadWeek()};$('edit').onclick=function(){openRoom(S.room,S.date)}}
 
 /* ---------- สรุปสัปดาห์ (ครูหลัก) ---------- */
-function sumRows(){return sortedRooms().map(function(r){var s=roomState(r);return{room:r,s:s,g:s.g}})}
-function vSum(){S.tab='sum';var p=planOf(S.w),rows=sumRows();
+function sumRows(){return shownRooms().map(function(r){var s=roomState(r);return{room:r,s:s,g:s.g}})}
+function vSum(){S.tab='sum';var g4=curGrade()==='4',p=g4?planOf(S.w):null,rows=sumRows();
  var rubric=p&&/รูบริก|คุณภาพ/.test(p.tool);
  var tot={n:0,x:0,a:0,b:0};rows.forEach(function(r){if(r.g){tot.n+=r.g.n;tot.x+=r.g.x;tot.a+=r.g.a;tot.b+=r.g.b}});
  var tr=rows.map(function(r){var g=r.g;if(!g)return '<tr><td>ป.'+r.room+'</td><td colspan="6" class="hint" style="text-align:left">'+(r.s.k==='off'?'งดสอน · '+esc(r.s.why):r.s.k==='wait'?'ยังไม่ถึงวันสอน':'<span style="color:var(--go)">ยังไม่บันทึก</span>')+'</td></tr>';
@@ -228,16 +239,16 @@ function vSum(){S.tab='sum';var p=planOf(S.w),rows=sumRows();
  var map=p?'<div class="card plan"><div class="h" style="font-size:15px">ค่าที่จะลงฟอร์มบันทึกหลังสอน</div><ul>'+
   (rubric?'<li>รูบริก: 4 ดีมาก = จำนวน A · 3 ดี = จำนวน B · 2, 1 = "-"</li><li>ตารางผ่าน/ไม่ผ่าน = "-" ทั้งหมด</li>':'<li>แบบสังเกตพฤติกรรม: ผ่าน = ทุกคน · ไม่ผ่าน/แก้ไข = "-"</li><li>ตารางรูบริก 4 ระดับ = "-" ทั้งหมด</li>')+
   '<li>คุณลักษณะ ('+p.attr.length+' ข้อตามแผน): ดีเยี่ยม = A · ดี = B · ผ่าน = "-"</li><li>สมรรถนะ ('+p.comp.length+' ข้อตามแผน): ดีมาก = A · ดี = B</li><li>ข้อที่แผนไม่ได้ระบุ = "-"</li></ul></div>':'';
- $('app').innerHTML=header()+planCard(true)+
+ $('app').innerHTML=header()+gradeBar()+planCard(true)+
  '<div class="tbl"><table><thead><tr><th>ห้อง</th><th>วันที่</th><th>มา</th><th>ขาด</th><th>A</th><th>B</th><th>ช้า</th></tr></thead><tbody>'+tr+
  '<tr><td><b>รวม</b></td><td></td><td>'+(tot.n-tot.x)+'/'+tot.n+'</td><td class="X">'+tot.x+'</td><td class="A">'+tot.a+'</td><td class="B">'+tot.b+'</td><td></td></tr></tbody></table></div>'+
- (notes||'<div class="hint">ไม่มีหมายเหตุ/ปัญหาในสัปดาห์นี้</div>')+map+docCard(rows)+
+ (notes||'<div class="hint">ไม่มีหมายเหตุ/ปัญหาในสัปดาห์นี้</div>')+map+(g4?docCard(rows):'')+
  '<div class="err" id="err"></div><div id="res"></div>'+
- '<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn line sm" id="mk">สร้างชีตสรุปใน Google Sheet</button><button class="btn line sm" id="cp">คัดลอกตาราง</button><button class="btn line sm" id="rf">รีเฟรช</button></div>';
- dock('<button class="btn go" id="xl"'+(p?'':' disabled')+'>สร้าง Excel บันทึกหลังสอน ส.'+S.w+'</button>'+tabs());bindWeek();bindTabs();$('rf').onclick=loadWeek;bindDoc();updQ();
- $('xl').onclick=function(){makeXlsx(rows)};
+ '<div style="display:flex;gap:8px;flex-wrap:wrap">'+(g4?'<button class="btn line sm" id="mk">สร้างชีตสรุปใน Google Sheet</button>':'')+'<button class="btn line sm" id="cp">คัดลอกตาราง</button><button class="btn line sm" id="rf">รีเฟรช</button></div>';
+ dock((g4?'<button class="btn go" id="xl"'+(p?'':' disabled')+'>สร้าง Excel บันทึกหลังสอน ส.'+S.w+'</button>':'')+tabs());bindWeek();bindTabs();bindGrade();$('rf').onclick=loadWeek;if(g4)bindDoc();updQ();
+ if(g4){$('xl').onclick=function(){makeXlsx(rows)};
  $('mk').onclick=function(){if(S.busy)return;var b=this;b.textContent='กำลังสร้าง…';
-  call('weekSheet',[S.pin,S.w],function(v){b.textContent='สร้างชีตสรุปใน Google Sheet';$('res').innerHTML='<a class="btn line" href="'+esc(v.url)+'" target="_blank">เปิดแผ่น "'+esc(v.name)+'"</a>'},function(){b.textContent='ลองอีกครั้ง'})};
+  call('weekSheet',[S.pin,S.w],function(v){b.textContent='สร้างชีตสรุปใน Google Sheet';$('res').innerHTML='<a class="btn line" href="'+esc(v.url)+'" target="_blank">เปิดแผ่น "'+esc(v.name)+'"</a>'},function(){b.textContent='ลองอีกครั้ง'})}}
  $('cp').onclick=function(){var t=[['ห้อง','วันที่','ผู้บันทึก','ทั้งหมด','มา','ขาด','A','B','ช้า(นาที)','เพลง/หัวข้อ','หมายเหตุ'].join('\t')].concat(rows.map(function(r){var g=r.g;
    return g?['ป.'+r.room,g.date,g.by,g.n,g.n-g.x,g.x,g.a,g.b,g.late,g.song,g.note||'ไม่มี'].join('\t'):['ป.'+r.room,r.s.date,'','','','','','','','',r.s.k==='off'?'งดสอน '+r.s.why:'ยังไม่บันทึก'].join('\t')})).join('\n');
   var done=function(){$('cp').textContent='คัดลอกแล้ว ✓'};
@@ -251,7 +262,7 @@ var ATTR=['รักชาติ','ซื่อสัตย์','วินัย
 var COMP=['สื่อสาร','คิด','แก้ปัญหา','ทักษะชีวิต','เทคโนโลยี'];
 var TEACHER='(นายบงการ  จิตต์สว่าง)';
 S.doc={};
-function formRooms(){return S.me.rooms.slice().sort(function(a,b){return a.localeCompare(b,'th',{numeric:true})})}
+function formRooms(){return S.me.rooms.filter(function(r){return gradeOf(r)==='4'}).sort(function(a,b){return a.localeCompare(b,'th',{numeric:true})})}
 function itemNo(text,names){var m=String(text).match(/\((\d)\.\d+\)/);if(m)return +m[1];for(var i=0;i<names.length;i++)if(String(text).indexOf(names[i])>=0)return i+1;return 0}
 function docDefaults(rows){var p=planOf(S.w)||{media:[]},probs=[],offs={};
  formRooms().forEach(function(r){var x=rows.filter(function(y){return y.room===r})[0];if(!x)return;
