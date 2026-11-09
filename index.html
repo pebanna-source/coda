@@ -233,6 +233,54 @@ function vSaved(v){dock(null);$('app').innerHTML='<div class="ok"><svg width="64
 function openCount(){return (S.news&&S.news.items||[]).filter(function(i){return i.type==='งาน'&&i.mine&&i.done.indexOf(S.me.name)<0}).length}
 function updBadge(){var b=$('tN');if(b)b.textContent='ข่าว/งาน'+(openCount()?' ('+openCount()+')':'')}
 function fetchNews(){rpc('news',[S.pin]).then(function(v){S.news=v;updBadge();if(S.screen==='news'&&!S.nf_dirty)vNews()},function(){})}
+/* ---------- อ่านไฟล์ประวัติแชตไลน์ (อ่านในเครื่องเท่านั้น ลงระบบเฉพาะข้อที่ติ๊ก) ---------- */
+var TH_M={'ม.ค':1,'มกราคม':1,'ก.พ':2,'กุมภาพันธ์':2,'มี.ค':3,'มีนาคม':3,'เม.ย':4,'เมษายน':4,'พ.ค':5,'พฤษภาคม':5,'มิ.ย':6,'มิถุนายน':6,'ก.ค':7,'กรกฎาคม':7,'ส.ค':8,'สิงหาคม':8,'ก.ย':9,'กันยายน':9,'ต.ค':10,'ตุลาคม':10,'พ.ย':11,'พฤศจิกายน':11,'ธ.ค':12,'ธันวาคม':12};
+var LN_KEY=/@|รบกวน|ภายใน|ด่วน|กำหนด|ฝาก|งดเรียน|งดสอน|ประชุม|ทุกท่าน|แจ้ง|ส่งงาน|ส่งแผน|ส่งคะแนน/;
+var LN_SKIP=/รหัสผ่าน|password|พาสเวิร์ด/i;
+function pad2(n){return ('0'+n).slice(-2)}
+function parseLine(txt){var out=[],day=null,cur=null,ok=false;
+ String(txt).replace(/[⁦-⁩‎‏﻿\r]/g,'').split('\n').forEach(function(l){var m;
+  if(m=l.trim().match(/^(?:\S+\s+)?(\d{1,2})\/(\d{1,2})\/(\d{4})$/)){var y=+m[3];day=(y>2400?y-543:y)+'-'+pad2(+m[2])+'-'+pad2(+m[1]);cur=null;ok=true;return}
+  if(m=l.trim().match(/^(\d{4})[.\-](\d{2})[.\-](\d{2})(?:\s+\S+)?$/)){day=m[1]+'-'+m[2]+'-'+m[3];cur=null;ok=true;return}
+  if(day&&(m=l.match(/^(\d{1,2}:\d{2})\t([^\t]*)\t?(.*)$/))){if(!m[2]){cur=null;return}cur={day:day,time:pad2(+m[1].split(':')[0])+':'+m[1].split(':')[1],who:m[2],text:m[3]};out.push(cur);return}
+  if(cur)cur.text+='\n'+l});
+ if(!ok)return null;
+ out.forEach(function(x){x.text=x.text.replace(/\s+$/,'');if(x.text.charAt(0)==='"')x.text=x.text.replace(/^"/,'').replace(/"$/,'').replace(/""/g,'"')});return out}
+function dueOf(t,day){var m=t.match(/(\d{1,2})\s*(ม\.ค|ก\.พ|มี\.ค|เม\.ย|พ\.ค|มิ\.ย|ก\.ค|ส\.ค|ก\.ย|ต\.ค|พ\.ย|ธ\.ค|มกราคม|กุมภาพันธ์|มีนาคม|เมษายน|พฤษภาคม|มิถุนายน|กรกฎาคม|สิงหาคม|กันยายน|ตุลาคม|พฤศจิกายน|ธันวาคม)/);if(!m)return '';
+ var d=+m[1],mo=TH_M[m[2]],y=+day.slice(0,4),v=y+'-'+pad2(mo)+'-'+pad2(d);if(d<1||d>31)return '';if(d2n(v)<d2n(day)-60)v=(y+1)+'-'+pad2(mo)+'-'+pad2(d);return v}
+function peopleOf(t,names){var ms=(t.match(/@[^\s@]+/g)||[]).join(' ');return names.filter(function(n){var base=n.replace(/^(ครู|พี่|น้อง)/,''),alias=n==='ครูเป้'?['บงการ','เป้']:[base];
+  return alias.some(function(a){return ms.indexOf(a)>=0})||['ครู','พี่','น้อง'].some(function(p){return t.indexOf(p+base)>=0})})}
+function maskText(t){return t.replace(/\d[\d\- ]{4,}\d/g,'•••')}
+function candidates(all,since,names){var limit=n2d(d2n(S.me.today)-14);return all.filter(function(x){var k=x.day+' '+x.time;return (since?k>since:x.day>=limit)&&x.text.length>=8&&!/^\[[^\]]+\]$/.test(x.text.trim())&&!LN_SKIP.test(x.text)&&LN_KEY.test(x.text)}).slice(-40).reverse().map(function(x,i){
+  var lines=x.text.split('\n').map(function(l){return l.trim()}).filter(String),head=lines.filter(function(l){return l.charAt(0)!=='@'})[0]||lines[0];
+  var title=maskText(head.replace(/@[^\s@]+/g,'').replace(/\s+/g,' ').trim()).slice(0,100),to=peopleOf(x.text,names);
+  return{on:false,when:x.day+' '+x.time,title:title||'(ไม่มีหัวข้อ)',detail:maskText(x.text.replace(/@[^\s@]+/g,'').trim()).slice(0,300),due:dueOf(x.text,x.day),to:to,type:to.length?'งาน':'ข่าว',masked:/\d[\d\- ]{4,}\d/.test(x.text),i:i}}).sort(function(a,b){return (b.to.length?1:0)-(a.to.length?1:0)||a.i-b.i})}
+function lastKey(){return 'coda_line_last'}
+function impCard(){var I=S.imp,d=S.news||{teachers:[]};
+ var pick='<div class="card" style="display:flex;flex-direction:column;gap:8px"><div style="font-family:Mitr;font-size:16px">อ่านจากไฟล์ประวัติแชตไลน์</div><div class="hint">ส่งออกแชตจากไลน์เป็น .txt แล้วเลือกไฟล์ · อ่านในเครื่องนี้เท่านั้น ลงระบบเฉพาะข้อที่ติ๊ก</div><input type="file" id="nF" accept=".txt,text/plain"><div class="err" id="impErr"></div></div>';
+ if(!I)return pick;
+ if(!I.list.length)return pick+'<div class="note">ไม่พบข้อความใหม่ที่น่าจะเป็นข่าวหรืองาน</div>';
+ var n=I.list.filter(function(x){return x.on}).length;
+ return pick+'<div class="note">พบ '+I.list.length+' ข้อความ · ติ๊กข้อที่จะลง แล้วตรวจชื่อกับวันส่ง</div>'+I.list.map(function(x,i){return '<div class="card" style="display:flex;flex-direction:column;gap:6px">'+
+  '<label style="display:flex;gap:8px;align-items:center"><input type="checkbox" data-ii="'+i+'" '+(x.on?'checked':'')+'><span class="sub">'+esc(x.when)+(x.masked?' · ซ่อนตัวเลขยาวแล้ว':'')+'</span></label>'+
+  '<input type="text" maxlength="100" data-it="'+i+'" value="'+esc(x.title)+'">'+(x.detail&&x.detail!==x.title?'<div class="sub" style="white-space:pre-wrap;max-height:90px;overflow:auto">'+esc(x.detail)+'</div>':'')+
+  '<div class="chips">'+['ข่าว','งาน'].map(function(t){return '<button class="chip '+(x.type===t?'on':'')+'" data-iy="'+i+'" data-v="'+t+'">'+t+'</button>'}).join('')+'</div>'+
+  (x.type==='งาน'?'<input type="date" data-id="'+i+'" value="'+esc(x.due)+'"><div class="chips">'+d.teachers.map(function(t){return '<button class="chip '+(x.to.indexOf(t)>=0?'on':'')+'" data-ip="'+i+'" data-v="'+esc(t)+'">'+esc(t)+'</button>'}).join('')+'</div>':'')+'</div>'}).join('')+
+  '<div class="err" id="impErr2"></div><button class="btn go" id="iS"'+(n?'':' disabled')+'>ลงข้อที่ติ๊ก ('+n+')</button><button class="btn line sm" id="iX">ไม่มีข้อที่ต้องลง · ปิดรอบนี้</button>'}
+function bindImp(){var f=$('nF');if(!f)return;
+ f.onchange=function(){var file=f.files[0];if(!file)return;var r=new FileReader();r.onload=function(){var all=parseLine(r.result);if(!all){$('impErr').textContent='อ่านไฟล์ไม่ได้ ต้องเป็นไฟล์ประวัติแชตไลน์ .txt';return}
+   var max=all.length?all[all.length-1].day+' '+all[all.length-1].time:'';S.imp={list:candidates(all,lsGet(lastKey()),(S.news||{teachers:[]}).teachers),max:max};S.nf_dirty=true;vNews()};r.readAsText(file)};
+ if(!S.imp)return;var L=S.imp.list;
+ each('[data-ii]',function(c){c.onchange=function(){L[+c.getAttribute('data-ii')].on=c.checked;var n=L.filter(function(x){return x.on}).length,b=$('iS');if(b){b.disabled=!n;b.textContent='ลงข้อที่ติ๊ก ('+n+')'}}});
+ each('[data-it]',function(c){c.oninput=function(){L[+c.getAttribute('data-it')].title=c.value}});
+ each('[data-id]',function(c){c.onchange=function(){L[+c.getAttribute('data-id')].due=c.value}});
+ each('[data-iy]',function(c){c.onclick=function(){L[+c.getAttribute('data-iy')].type=c.getAttribute('data-v');vNews()}});
+ each('[data-ip]',function(c){c.onclick=function(){var x=L[+c.getAttribute('data-ip')],n=c.getAttribute('data-v'),k=x.to.indexOf(n);k<0?x.to.push(n):x.to.splice(k,1);vNews()}});
+ var finish=function(){if(S.imp.max)lsSet(lastKey(),S.imp.max);S.imp=null;S.nf_dirty=false};
+ if($('iX'))$('iX').onclick=function(){finish();vNews()};
+ if($('iS'))$('iS').onclick=function(){var pick=L.filter(function(x){return x.on}),e=$('impErr2');if(pick.some(function(x){return !x.title.trim()})){e.textContent='มีข้อที่ไม่มีหัวข้อ';return}if(pick.some(function(x){return x.type==='งาน'&&!x.to.length})){e.textContent='ข้อที่เป็นงานต้องเลือกคนรับ';return}
+  if(S.busy)return;this.textContent='กำลังลง…';call('newsAddMany',[S.pin,pick.map(function(x){return{type:x.type,title:x.title,detail:x.detail,due:x.due,to:x.to}})],function(v){S.news=v;finish();vNews()})}}
+
 function vNews(){S.tab='news';S.screen='news';var d=S.news||{items:[],teachers:[]},me=S.me.name,f=S.nf||(S.nf={type:'ข่าว',title:'',detail:'',due:'',to:[]});
  var mine=d.items.filter(function(i){return i.type==='งาน'&&i.mine}),news=d.items.filter(function(i){return i.type==='ข่าว'}),sent=d.items.filter(function(i){return i.type==='งาน'&&!i.mine&&i.by===me});
  mine.sort(function(a,b){var x=a.done.indexOf(me)>=0,y=b.done.indexOf(me)>=0;return x-y||String(a.due||'9').localeCompare(String(b.due||'9'))});
@@ -245,6 +293,7 @@ function vNews(){S.tab='news';S.screen='news';var d=S.news||{items:[],teachers:[
   '<textarea id="nD" maxlength="300" rows="3" placeholder="รายละเอียด (วางข้อความจากไลน์แล้วตัดให้สั้น)">'+esc(f.detail)+'</textarea>'+
   (f.type==='งาน'?'<label class="hint" for="nW">วันส่ง (ไม่มีก็เว้นว่าง)</label><input type="date" id="nW" value="'+esc(f.due)+'"><div class="hint">ส่งถึง (เลือกคนที่ถูกแท็กในไลน์)</div><div class="chips">'+d.teachers.map(function(n){return '<button class="chip '+(f.to.indexOf(n)>=0?'on':'')+'" data-nto="'+esc(n)+'">'+esc(n)+'</button>'}).join('')+'</div>':'')+
   '<div class="hint">ห้ามใส่รหัสผ่าน เลขบัตร หรือชื่อ-รหัสนักเรียน</div><div class="err" id="err"></div><button class="btn go" id="nS">ลงให้ทุกคนเห็น</button></div>';
+ if(isOwner())form=impCard()+form;
  var sec=function(t,a){return a?'<div style="font-family:Mitr;font-size:17px;margin-top:6px">'+t+'</div>'+a:''};
  $('app').innerHTML='<div class="top"><div class="logo grow">'+LOGO+'Coda</div><span class="tag '+(isOwner()?'own':'')+'">'+esc(S.me.role)+'</span><span class="sub">'+esc(me)+'</span></div>'+form+
   sec('งานของฉัน',mine.map(function(i){var ok=i.done.indexOf(me)>=0;return card(i,'<button class="btn '+(ok?'line':'go')+' sm" data-nk="'+esc(i.id)+'" data-v="'+(ok?0:1)+'">'+(ok?'✓ เสร็จแล้ว (แตะเพื่อยกเลิก)':'ทำเสร็จแล้ว')+'</button>')}).join(''))+
@@ -253,7 +302,7 @@ function vNews(){S.tab='news';S.screen='news';var d=S.news||{items:[],teachers:[
   (!mine.length&&!news.length&&!sent.length?'<div class="hint" style="text-align:center;padding:24px 0">ยังไม่มีข่าวหรืองาน</div>':'')+(isOwner()?'':'<div class="err" id="err"></div>');
  dock(tabs());bindTabs();
  var wr=function(fn,args){if(S.busy)return;S.nf_dirty=false;call(fn,args,function(v){S.news=v;vNews()})};
- if(isOwner()){var dirty=function(){S.nf_dirty=true};
+ if(isOwner()){bindImp();var dirty=function(){S.nf_dirty=true};
   $('nT').oninput=function(){f.title=this.value;dirty()};$('nD').oninput=function(){f.detail=this.value;dirty()};if($('nW'))$('nW').onchange=function(){f.due=this.value;dirty()};
   each('[data-nt]',function(b){b.onclick=function(){f.type=b.getAttribute('data-nt');dirty();vNews()}});
   each('[data-nto]',function(b){b.onclick=function(){var n=b.getAttribute('data-nto'),k=f.to.indexOf(n);k<0?f.to.push(n):f.to.splice(k,1);dirty();vNews()}});
