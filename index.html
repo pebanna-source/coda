@@ -252,13 +252,25 @@ function dueOf(t,day){var m=t.match(/(\d{1,2})\s*(ม\.ค|ก\.พ|มี\.ค|
 function peopleOf(t,names){var ms=(t.match(/@[^\s@]+/g)||[]).join(' ').toLowerCase(),al=(S.news&&S.news.aliases)||{};return names.filter(function(n){var base=n.replace(/^(ครู|พี่|น้อง)/,''),alias=[base.toLowerCase()].concat(al[n]||[]);
   return alias.some(function(a){return ms.indexOf(/^[a-z0-9]/.test(a)?'@'+a:a)>=0})||['ครู','พี่','น้อง'].some(function(p){return t.indexOf(p+base)>=0})})}
 function maskText(t){return t.replace(/\d[\d\- ]{4,}\d/g,'•••')}
-function candidates(all,since,names){var limit=n2d(d2n(S.me.today)-14);return all.filter(function(x){var k=x.day+' '+x.time;return (since?k>since:x.day>=limit)&&x.text.length>=8&&!/^\[[^\]]+\]$/.test(x.text.trim())&&!LN_SKIP.test(x.text)&&LN_KEY.test(x.text)}).slice(-40).reverse().map(function(x,i){
+function candidates(all,since,names,raw){var limit=n2d(d2n(S.me.today)-14);return all.filter(function(x){var k=x.day+' '+x.time;return !LN_SKIP.test(x.text)&&(raw?x.text.trim().length>0:(since?k>since:x.day>=limit)&&x.text.length>=8&&!/^\[[^\]]+\]$/.test(x.text.trim())&&LN_KEY.test(x.text))}).slice(-40).reverse().map(function(x,i){
   var lines=x.text.split('\n').map(function(l){return l.trim()}).filter(String),head=lines.filter(function(l){return l.charAt(0)!=='@'})[0]||lines[0];
   var title=maskText(head.replace(/@[^\s@]+/g,'').replace(/\s+/g,' ').trim()).slice(0,100),to=peopleOf(x.text,names);
   return{on:false,when:x.day+' '+x.time,title:title||'(ไม่มีหัวข้อ)',detail:maskText(x.text.replace(/@[^\s@]+/g,'').trim()).slice(0,300),due:dueOf(x.text,x.day),to:to,type:to.length?'งาน':'ข่าว',masked:/\d[\d\- ]{4,}\d/.test(x.text),i:i}}).sort(function(a,b){return (b.to.length?1:0)-(a.to.length?1:0)||a.i-b.i})}
 function lastKey(){return 'coda_line_last'}
+/* วางข้อความจากไลน์: แยกข้อความ แจกงานตามชื่อ แล้วลงให้ทันที · ข้อที่มีชื่อนักเรียนพักไว้ให้ตรวจก่อน */
+function splitPaste(t){var today=S.me.today,all=parseLine(t);if(all&&all.length)return all;
+ var out=[],cur=null;String(t).replace(/[⁦-⁩‎‏﻿\r]/g,'').split('\n').forEach(function(l){var m=l.match(/^\[?(\d{1,2}:\d{2})\]?[\t ]+(.*)$/);
+  if(m){var b=m[2].split('\t');cur={day:today,time:m[1],text:b.length>1?b.slice(1).join(' '):m[2]};out.push(cur)}else if(cur)cur.text+='\n'+l;else{cur={day:today,time:'00:00',text:l};out.push(cur)}});return out}
+function kidHit(t){var R=S.me.roster||{};return Object.keys(R).some(function(k){return R[k].some(function(s){var n=String(s.name||'');return n.length>=4&&t.indexOf(n)>=0})})}
+function autoPaste(text){var st=$('nPs'),names=(S.news||{teachers:[]}).teachers;if(!String(text).trim()||S.busy)return;
+ var msgs=splitPaste(text),skip=msgs.filter(function(x){return LN_SKIP.test(x.text)}).length,list=candidates(msgs,'',names,true);
+ list.forEach(function(x,i){x.kid=kidHit(x.detail+' '+x.title)});
+ var ok=list.filter(function(x){return !x.kid}),hold=list.filter(function(x){return x.kid});
+ var tail=(hold.length?' · พัก '+hold.length+' ข้อที่มีชื่อนักเรียนให้ตรวจ':'')+(skip?' · ข้าม '+skip+' ข้อที่มีรหัสผ่าน':'');
+ var done=function(v){if(v)S.news=v;var work=ok.filter(function(x){return x.type==='งาน'}).length;if(hold.length){hold.forEach(function(x){x.on=false});S.imp={list:hold,max:''};S.nf_dirty=true}S.pasteMsg='ลงแล้ว '+ok.length+' รายการ (งาน '+work+' · ข่าว '+(ok.length-work)+')'+tail;vNews()};
+ if(!ok.length){done();return}st.textContent='กำลังแจกงาน…';call('newsAddMany',[S.pin,ok.map(function(x){return{type:x.type,title:x.title,detail:x.detail,due:x.due,to:x.to}})],done,function(){st.textContent='ลงไม่สำเร็จ ลองวางใหม่'})}
 function impCard(){var I=S.imp,d=S.news||{teachers:[]};
- var pick='<div class="card" style="display:flex;flex-direction:column;gap:8px"><div style="font-family:Mitr;font-size:16px">อ่านจากไฟล์ประวัติแชตไลน์</div><div class="hint">ส่งออกแชตจากไลน์เป็น .txt แล้วเลือกไฟล์ · อ่านในเครื่องนี้เท่านั้น ลงระบบเฉพาะข้อที่ติ๊ก</div><input type="file" id="nF" accept=".txt,text/plain"><div class="err" id="impErr"></div></div>';
+ var pick='<div class="card" style="display:flex;flex-direction:column;gap:8px"><div style="font-family:Mitr;font-size:16px">วางข้อความจากไลน์</div><div class="hint">คัดลอกจากไลน์แล้ววาง · แจกงานตามชื่อที่แท็กให้ทันที ไม่มีแท็ก = ข่าวให้ทุกคน · ลงผิดกดลบได้</div><textarea id="nP" rows="3" placeholder="วางข้อความที่นี่"></textarea><button class="btn line sm" id="nPb">แจกงาน</button><div class="sub" id="nPs">'+esc(S.pasteMsg||'')+'</div><details><summary class="hint">หรือใช้ไฟล์ประวัติแชต</summary><div style="display:flex;flex-direction:column;gap:8px;margin-top:8px"><input type="file" id="nF" accept=".txt,text/plain"><div class="err" id="impErr"></div></div></details></div>';
  if(!I)return pick;
  if(!I.list.length)return pick+'<div class="note">ไม่พบข้อความใหม่ที่น่าจะเป็นข่าวหรืองาน</div>';
  var n=I.list.filter(function(x){return x.on}).length;
@@ -268,7 +280,7 @@ function impCard(){var I=S.imp,d=S.news||{teachers:[]};
   '<div class="chips">'+['ข่าว','งาน'].map(function(t){return '<button class="chip '+(x.type===t?'on':'')+'" data-iy="'+i+'" data-v="'+t+'">'+t+'</button>'}).join('')+'</div>'+
   (x.type==='งาน'?'<input type="date" data-id="'+i+'" value="'+esc(x.due)+'"><div class="chips">'+d.teachers.map(function(t){return '<button class="chip '+(x.to.indexOf(t)>=0?'on':'')+'" data-ip="'+i+'" data-v="'+esc(t)+'">'+esc(t)+'</button>'}).join('')+'</div>':'')+'</div>'}).join('')+
   '<div class="err" id="impErr2"></div><button class="btn go" id="iS"'+(n?'':' disabled')+'>ลงข้อที่ติ๊ก ('+n+')</button><button class="btn line sm" id="iX">ไม่มีข้อที่ต้องลง · ปิดรอบนี้</button>'}
-function bindImp(){var f=$('nF');if(!f)return;
+function bindImp(){var f=$('nF');if(!f)return;var ta=$('nP');ta.onpaste=function(){setTimeout(function(){autoPaste(ta.value)},60)};$('nPb').onclick=function(){autoPaste(ta.value)};
  f.onchange=function(){var file=f.files[0];if(!file)return;var r=new FileReader();r.onload=function(){var all=parseLine(r.result);if(!all){$('impErr').textContent='อ่านไฟล์ไม่ได้ ต้องเป็นไฟล์ประวัติแชตไลน์ .txt';return}
    var max=all.length?all[all.length-1].day+' '+all[all.length-1].time:'';S.imp={list:candidates(all,lsGet(lastKey()),(S.news||{teachers:[]}).teachers),max:max};S.nf_dirty=true;vNews()};r.readAsText(file)};
  if(!S.imp)return;var L=S.imp.list;
