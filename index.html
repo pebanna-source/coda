@@ -275,12 +275,14 @@ function parseLine(txt){var out=[],day=null,cur=null,ok=false;
   if(cur)cur.text+='\n'+l});
  if(!ok)return null;
  out.forEach(function(x){x.text=x.text.replace(/\s+$/,'');if(x.text.charAt(0)==='"')x.text=x.text.replace(/^"/,'').replace(/"$/,'').replace(/""/g,'"')});return out}
-function dueOf(t,day){var m=t.match(/(\d{1,2})\s*(ม\.ค|ก\.พ|มี\.ค|เม\.ย|พ\.ค|มิ\.ย|ก\.ค|ส\.ค|ก\.ย|ต\.ค|พ\.ย|ธ\.ค|มกราคม|กุมภาพันธ์|มีนาคม|เมษายน|พฤษภาคม|มิถุนายน|กรกฎาคม|สิงหาคม|กันยายน|ตุลาคม|พฤศจิกายน|ธันวาคม)/);if(!m)return '';
- var d=+m[1],mo=TH_M[m[2]],y=+day.slice(0,4),v=y+'-'+pad2(mo)+'-'+pad2(d);if(d<1||d>31)return '';if(d2n(v)<d2n(day)-60)v=(y+1)+'-'+pad2(mo)+'-'+pad2(d);return v}
+function dueOf(t,day){var m=t.match(/(\d{1,2})\s*(ม\.ค|ก\.พ|มี\.ค|เม\.ย|พ\.ค|มิ\.ย|ก\.ค|ส\.ค|ก\.ย|ต\.ค|พ\.ย|ธ\.ค|มกราคม|กุมภาพันธ์|มีนาคม|เมษายน|พฤษภาคม|มิถุนายน|กรกฎาคม|สิงหาคม|กันยายน|ตุลาคม|พฤศจิกายน|ธันวาคม)\.?\s*(?:พ\.?ศ\.?\s*)?(\d{4}|\d{2}(?![\d.:]))?/);if(!m)return '';
+ var d=+m[1],mo=TH_M[m[2]],y=+day.slice(0,4);if(d<1||d>31)return '';if(m[3]){var Y=+m[3];if(Y<100)Y+=2500;y=Y>2400?Y-543:Y;return y+'-'+pad2(mo)+'-'+pad2(d)}var v=y+'-'+pad2(mo)+'-'+pad2(d);if(d2n(v)<d2n(day)-60)v=(y+1)+'-'+pad2(mo)+'-'+pad2(d);return v}
 function peopleOf(t,names){var ms=(t.match(/@[^\s@]+/g)||[]).join(' ').toLowerCase(),al=(S.news&&S.news.aliases)||{};return names.filter(function(n){var base=n.replace(/^(ครู|พี่|น้อง)/,''),alias=[base.toLowerCase()].concat(al[n]||[]);
   return alias.some(function(a){return ms.indexOf(/^[a-z0-9]/.test(a)?'@'+a:a)>=0})||['ครู','พี่','น้อง'].some(function(p){return t.indexOf(p+base)>=0})})}
 function maskText(t){return t.replace(/\d[\d\- ]{4,}\d/g,'•••')}
-function candidates(all,since,names,raw){var limit=n2d(d2n(S.me.today)-14);return all.filter(function(x){var k=x.day+' '+x.time;return !LN_SKIP.test(x.text)&&(raw?x.text.trim().length>0:(since?k>since:x.day>=limit)&&x.text.length>=8&&!/^\[[^\]]+\]$/.test(x.text.trim())&&LN_KEY.test(x.text))}).slice(-40).reverse().map(function(x,i){
+function cleanMsg(t){return String(t).replace(/^\s*\[(?:โน้ต|Note)\]\s*/i,'').trim()}
+function usefulMsg(x,one){var t=cleanMsg(x.text),today=S.me.today;if(t.length<(one?3:8)||/^\(?null\)?$/i.test(t)||/^\[[^\]]+\]$/.test(t)||/^https?:\S+$/.test(t))return false;if(x.day<n2d(d2n(today)-14))return false;var due=dueOf(t,x.day);if(due&&due<today)return false;return one||LN_KEY.test(t)}
+function candidates(all,since,names,raw){var limit=n2d(d2n(S.me.today)-14);return all.filter(function(x){var k=x.day+' '+x.time;return !LN_SKIP.test(x.text)&&(raw?usefulMsg(x,all.length===1):(since?k>since:x.day>=limit)&&x.text.length>=8&&!/^\[[^\]]+\]$/.test(x.text.trim())&&LN_KEY.test(x.text))}).slice(-40).reverse().map(function(x,i){
   var lines=x.text.split('\n').map(function(l){return l.trim()}).filter(String),head=lines.filter(function(l){return l.charAt(0)!=='@'})[0]||lines[0];
   var title=maskText(head.replace(/@[^\s@]+/g,'').replace(/\s+/g,' ').trim()).slice(0,100),to=peopleOf(x.text,names);
   return{on:false,when:x.day+' '+x.time,title:title||'(ไม่มีหัวข้อ)',detail:maskText(x.text.replace(/@[^\s@]+/g,'').trim()).slice(0,300),due:dueOf(x.text,x.day),to:to,type:to.length?'งาน':'ข่าว',masked:/\d[\d\- ]{4,}\d/.test(x.text),i:i}}).sort(function(a,b){return (b.to.length?1:0)-(a.to.length?1:0)||a.i-b.i})}
@@ -291,10 +293,10 @@ function splitPaste(t){var today=S.me.today,all=parseLine(t);if(all&&all.length)
   if(m){var b=m[2].split('\t');cur={day:today,time:m[1],text:b.length>1?b.slice(1).join(' '):m[2]};out.push(cur)}else if(cur)cur.text+='\n'+l;else{cur={day:today,time:'00:00',text:l};out.push(cur)}});return out}
 function kidHit(t){var R=S.me.roster||{};return Object.keys(R).some(function(k){return R[k].some(function(s){var n=String(s.name||'');return n.length>=4&&t.indexOf(n)>=0})})}
 function autoPaste(text){var st=$('nPs'),names=(S.news||{teachers:[]}).teachers;if(!String(text).trim()||S.busy)return;
- var msgs=splitPaste(text),skip=msgs.filter(function(x){return LN_SKIP.test(x.text)}).length,list=candidates(msgs,'',names,true);
+ var msgs=splitPaste(text);msgs.forEach(function(x){x.text=cleanMsg(x.text)});var skip=msgs.filter(function(x){return LN_SKIP.test(x.text)}).length,list=candidates(msgs,'',names,true),ign=msgs.length-list.length-skip;
  list.forEach(function(x,i){x.kid=kidHit(x.detail+' '+x.title)});
  var ok=list.filter(function(x){return !x.kid}),hold=list.filter(function(x){return x.kid});
- var tail=(hold.length?' · พัก '+hold.length+' ข้อที่มีชื่อนักเรียนให้ตรวจ':'')+(skip?' · ข้าม '+skip+' ข้อที่มีรหัสผ่าน':'');
+ var tail=(hold.length?' · พัก '+hold.length+' ข้อที่มีชื่อนักเรียนให้ตรวจ':'')+(skip?' · ข้าม '+skip+' ข้อที่มีรหัสผ่าน':'')+(ign>0?' · ไม่ลง '+ign+' ข้อความที่เก่าหรือเป็นการคุยทั่วไป':'');
  var done=function(v){if(v)S.news=v;var work=ok.filter(function(x){return x.type==='งาน'}).length;if(hold.length){hold.forEach(function(x){x.on=false});S.imp={list:hold,max:''};S.nf_dirty=true}S.pasteMsg='ลงแล้ว '+ok.length+' รายการ (งาน '+work+' · ข่าว '+(ok.length-work)+')'+tail;vNews()};
  if(!ok.length){done();return}st.textContent='กำลังแจกงาน…';call('newsAddMany',[S.pin,ok.map(function(x){return{type:x.type,title:x.title,detail:x.detail,due:x.due,to:x.to}})],done,function(){st.textContent='ลงไม่สำเร็จ ลองวางใหม่'})}
 function impCard(){var I=S.imp,d=S.news||{teachers:[]};
