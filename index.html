@@ -113,7 +113,8 @@ function offOf(room,date){if(!date)return null;var o=S.me.off.filter(function(o)
 function planOf(w){return S.me.plans.filter(function(p){return p.week===w})[0]||null}
 function clean(s){return String(s).replace(/^[-•\s]+/,'')}
 function sortedRooms(){var tt=S.me.timetable,k=function(r){var t=tt[r]||{};return (t.day||9)*100+(parseInt(t.period,10)||99)};return S.me.rooms.slice().sort(function(a,b){return k(a)-k(b)||a.localeCompare(b,"th",{numeric:true})})}
-function isOwner(){return S.me.role==='ครูหลัก'}
+/* ครูหลัก + ผู้ดูแล เห็นทุกหน้า · การตั้งค่าและลิงก์ชีตอยู่ที่ครูหลักคนเดียว (Apps Script กันอีกชั้น) */
+function isOwner(){return S.me.role==='ครูหลัก'||S.me.role==='ผู้ดูแล'}
 /* ชั้นเรียน: ครูหลักสลับ ป.4/5/6 ด้วยแถบบนหน้า · ครูแทนเห็นทุกห้องของตนในรายการเดียว */
 function gradeOf(r){return String(r).split('/')[0]}
 function grades(){var o=[];S.me.rooms.forEach(function(r){var g=gradeOf(r);if(o.indexOf(g)<0)o.push(g)});return o.sort()}
@@ -244,10 +245,10 @@ function vSum(){S.tab='sum';var g4=curGrade()==='4',p=g4?planOf(S.w):null,rows=s
  '<tr><td><b>รวม</b></td><td></td><td>'+(tot.n-tot.x)+'/'+tot.n+'</td><td class="X">'+tot.x+'</td><td class="A">'+tot.a+'</td><td class="B">'+tot.b+'</td><td></td></tr></tbody></table></div>'+
  (notes||'<div class="hint">ไม่มีหมายเหตุ/ปัญหาในสัปดาห์นี้</div>')+map+(g4?docCard(rows):'')+
  '<div class="err" id="err"></div><div id="res"></div>'+
- '<div style="display:flex;gap:8px;flex-wrap:wrap">'+(g4?'<button class="btn line sm" id="mk">สร้างชีตสรุปใน Google Sheet</button>':'')+'<button class="btn line sm" id="cp">คัดลอกตาราง</button><button class="btn line sm" id="rf">รีเฟรช</button></div>';
+ '<div style="display:flex;gap:8px;flex-wrap:wrap">'+(g4&&S.me.sheetUrl?'<button class="btn line sm" id="mk">สร้างชีตสรุปใน Google Sheet</button>':'')+'<button class="btn line sm" id="cp">คัดลอกตาราง</button><button class="btn line sm" id="rf">รีเฟรช</button></div>';
  dock((g4?'<button class="btn go" id="xl"'+(p?'':' disabled')+'>สร้าง Excel บันทึกหลังสอน ส.'+S.w+'</button>':'')+tabs());bindWeek();bindTabs();bindGrade();$('rf').onclick=loadWeek;if(g4)bindDoc();updQ();
  if(g4){$('xl').onclick=function(){makeXlsx(rows)};
- $('mk').onclick=function(){if(S.busy)return;var b=this;b.textContent='กำลังสร้าง…';
+ if($('mk'))$('mk').onclick=function(){if(S.busy)return;var b=this;b.textContent='กำลังสร้าง…';
   call('weekSheet',[S.pin,S.w],function(v){b.textContent='สร้างชีตสรุปใน Google Sheet';$('res').innerHTML='<a class="btn line" href="'+esc(v.url)+'" target="_blank">เปิดแผ่น "'+esc(v.name)+'"</a>'},function(){b.textContent='ลองอีกครั้ง'})}}
  $('cp').onclick=function(){var t=[['ห้อง','วันที่','ผู้บันทึก','ทั้งหมด','มา','ขาด','A','B','ช้า(นาที)','เพลง/หัวข้อ','หมายเหตุ'].join('\t')].concat(rows.map(function(r){var g=r.g;
    return g?['ป.'+r.room,g.date,g.by,g.n,g.n-g.x,g.x,g.a,g.b,g.late,g.song,g.note||'ไม่มี'].join('\t'):['ป.'+r.room,r.s.date,'','','','','','','','',r.s.k==='off'?'งดสอน '+r.s.why:'ยังไม่บันทึก'].join('\t')})).join('\n');
@@ -401,7 +402,7 @@ function makeXlsx(rows){if(S.busy)return;var btn=$('xl'),lab=btn.textContent;
    files.forEach(function(f,i){setTimeout(function(){download(f.name,f.b64)},i*700)});
    each('[data-dl]',function(b){b.onclick=function(){var f=files[+b.getAttribute('data-dl')];download(f.name,f.b64)}});
    $('gd').onclick=function(){if(S.busy)return;var g=this;g.textContent='กำลังเก็บ…';
-    call('saveFile',[S.pin,S.w,files[0].name,files[0].b64],function(v){g.textContent='เก็บแล้ว ✓';$('gdr').innerHTML='<a href="'+esc(v.url)+'" target="_blank" style="color:var(--go)">เปิดไฟล์</a> · <a href="'+esc(v.folder)+'" target="_blank" style="color:var(--go)">เปิดโฟลเดอร์สัปดาห์'+ww+'</a>'},function(){g.textContent='ลองอีกครั้ง'})};
+    call('saveFile',[S.pin,S.w,files[0].name,files[0].b64],function(v){g.textContent='เก็บแล้ว ✓';$('gdr').innerHTML=!v.url?'เก็บในไดรฟ์ของครูเป้แล้ว':'<a href="'+esc(v.url)+'" target="_blank" style="color:var(--go)">เปิดไฟล์</a> · <a href="'+esc(v.folder)+'" target="_blank" style="color:var(--go)">เปิดโฟลเดอร์สัปดาห์'+ww+'</a>'},function(){g.textContent='ลองอีกครั้ง'})};
    $('res').scrollIntoView({behavior:'smooth'})})["catch"](function(e){btn.textContent=lab;if(e&&e.message)$('err').textContent='สร้างไฟล์ไม่สำเร็จ: '+e.message})}
 function download(name,b64){var blob=new Blob([b64ToBuf(b64)],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
  var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove()},4000)}
