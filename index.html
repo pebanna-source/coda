@@ -165,7 +165,7 @@ function weekMin(){return isOwner()?'':n2d(d2n(S.me.termStart)+(S.me.thisWeek-1)
 function vPin(){dock(null);$('app').innerHTML='<div class="top"><div class="logo">'+LOGO+'Coda</div><span class="sub">จบคาบ จบงาน</span></div>'+
  '<div class="card" style="display:flex;flex-direction:column;gap:12px"><div style="font-family:Mitr;font-size:18px">ใส่ PIN ของคุณครู</div>'+
  '<input class="pin" id="pin" type="password" inputmode="numeric" maxlength="6" autocomplete="off"><div class="err" id="err"></div>'+
- '<button class="btn go" id="enter">เข้าใช้งาน</button></div><div class="hint">PIN เป็นของคุณครูแต่ละท่าน ห้ามส่งต่อ · ครูเป้และครูแทนใช้ลิงก์เดียวกัน · รุ่น 5</div>';
+ '<button class="btn go" id="enter">เข้าใช้งาน</button></div><div class="hint">PIN เป็นของคุณครูแต่ละท่าน ห้ามส่งต่อ · ครูเป้และครูแทนใช้ลิงก์เดียวกัน · รุ่น 6</div>';
  $('enter').onclick=function(){S.pin=$('pin').value.trim();if(!S.pin||S.busy)return;$('enter').textContent='กำลังตรวจ…';
   call('login',[S.pin],function(v){S.me=v;lsSet('coda_pin',S.pin);lsSet('coda_me',JSON.stringify(v));S.w=Math.max(1,v.thisWeek);loadWeek()},function(){$('enter').textContent='เข้าใช้งาน'})};
  $('pin').onkeydown=function(e){if(e.key==='Enter')$('enter').click()};$('pin').focus()}
@@ -536,7 +536,7 @@ function pdfBox(dt,dg,p){var k=pdfKey(dt,dg),have=S.pdf[k];
  if(!p)return '<div class="card hint">ยังไม่มีแผนสัปดาห์ '+S.w+' ของ ป.'+dg+' · อัปโหลดแผนก่อน</div>';
  return '<div class="card" style="gap:8px;display:flex;flex-direction:column"><div class="rowb"><b style="font-family:Mitr;font-weight:500">PDF จริง · ฟอร์มโรงเรียน</b>'+(have?'<span class="ftag keep">พร้อม</span>':'')+'</div>'+
   (have?'<div id="pdfv" class="pdfv"><div class="hint">กำลังแสดงหน้า…</div></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn go sm" id="pdfS">บันทึก PDF ลงเครื่อง</button><button class="btn line sm" id="pdfR">สร้างใหม่</button></div>':
-  '<div class="hint">'+(dt==='plan'?'แปลงจากไฟล์ Word ที่อัปโหลดไว้':'เติมฟอร์ม Excel จริง แล้วแปลงเป็น PDF')+' · ใช้เวลาราว 1 นาที</div><button class="btn go" id="pdfM">สร้าง PDF จริง</button>')+
+  '<div class="hint">'+(dt==='plan'?'แปลงจากไฟล์ Word ที่อัปโหลดไว้':'เติมฟอร์ม Excel จริง แล้วแปลงเป็น PDF')+' · ใช้เวลาราว 30–40 วินาที</div><button class="btn go" id="pdfM">สร้าง PDF จริง</button>')+
   '<div class="hint">'+(dt==='plan'?'ฟอนต์ TH Sarabun New ทั้งเล่ม':'ฟอนต์ตามฟอร์ม Excel')+' · เช็กจำนวนหน้าก่อนส่ง</div></div>'}
 function loadPdfJs(){return new Promise(function(ok,no){if(window.pdfjsLib)return ok(window.pdfjsLib);var sc=document.createElement('script');sc.src='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';sc.onload=function(){pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';ok(pdfjsLib)};sc.onerror=function(){no(new Error('โหลดตัวแสดง PDF ไม่ได้'))};document.head.appendChild(sc)})}
 function showPdf(b64){var box=$('pdfv');if(!box)return;loadPdfJs().then(function(lib){return lib.getDocument({data:b64ToBuf(b64)}).promise}).then(function(doc){box.innerHTML='<div class="hint">'+doc.numPages+' หน้า · ซูมด้วยสองนิ้วได้</div>';var w=box.clientWidth||340,ch=Promise.resolve();
@@ -548,8 +548,8 @@ function buildXlsx(rows){return new Promise(function(ok,no){if(S.recordB64)retur
 function bindPdf(dt,dg,rows){var k=pdfKey(dt,dg);if(S.pdf[k]){showPdf(S.pdf[k]);$('pdfS').onclick=function(){savePdf(pdfName(dt,dg),S.pdf[k])};$('pdfR').onclick=function(){delete S.pdf[k];vDocPrev()};return}
  var b=$('pdfM');if(!b)return;b.onclick=function(){if(S.busy)return;var e=$('err');e.textContent='';b.textContent='กำลังแปลง… อย่าปิดหน้านี้';b.disabled=true;
   var done=function(v){b.disabled=false;S.pdf[k]=v.b64;if(S.screen==='docprev'&&S.docTab===dt)vDocPrev()},fail=function(x){b.disabled=false;b.textContent='ลองอีกครั้ง';if(x&&x.message&&e)e.textContent='สร้าง PDF ไม่สำเร็จ: '+x.message};
-  var t0=Date.now(),poll=function(id){rpc('pdfGet',[S.pin,id]).then(function(v){if(v.b64){done(v);return}var sec=Math.round((Date.now()-t0)/1000);if(sec>300){fail(new Error('ใช้เวลานานเกินไป ลองใหม่'));return}b.textContent='กำลังแปลง… '+sec+' วินาที (ราว 1 นาที)';setTimeout(function(){poll(id)},6000)},fail)};
-  var go=function(x){rpc('pdfStart',[S.pin,dt,dg,S.w,x||'']).then(function(v){setTimeout(function(){poll(v.id)},20000)},fail)};
+  var t0=Date.now(),poll=function(id){rpc('pdfGet',[S.pin,id]).then(function(v){if(v.b64){done(v);return}var sec=Math.round((Date.now()-t0)/1000);if(sec>300){fail(new Error('ใช้เวลานานเกินไป ลองใหม่'));return}b.textContent='กำลังแปลง… '+sec+' วินาที (ราว 30–40 วินาที)';setTimeout(function(){poll(id)},4000)},fail)};
+  var go=function(x){rpc('pdfStart',[S.pin,dt,dg,S.w,x||'']).then(function(v){setTimeout(function(){poll(v.id)},15000)},fail)};
   if(dt==='plan'){go('');return}
   if(typeof JSZip==='undefined'){fail(new Error('โหลดตัวสร้างไฟล์ไม่สำเร็จ ลองรีเฟรช'));return}
   buildXlsx(rows).then(go)["catch"](fail)}}
