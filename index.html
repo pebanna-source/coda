@@ -84,6 +84,14 @@ td.A{color:var(--a);font-family:'JetBrains Mono';font-weight:700}td.B{color:var(
 .checks{display:flex;flex-direction:column;gap:7px;font-size:14px}.checks div{display:flex;gap:8px;align-items:flex-start}.checks i{color:var(--go);font-style:normal;font-weight:700}
 .fl{display:flex;gap:8px}.fl>*{flex:1}.ftag{border-radius:12px;min-height:44px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;text-align:center;padding:0 6px}.ftag.send{background:var(--fg);color:var(--bg)}.ftag.keep{border:1px solid var(--line);color:var(--mute);background:none}.ftag.wait{border:1px dashed var(--dim);color:var(--dim)}
 .seg{display:grid;grid-template-columns:1fr 1fr;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:3px}.seg button{min-height:38px;border-radius:9px;font-size:14px;color:var(--mute)}.seg button.on{background:var(--fg);color:var(--bg);font-weight:600}
+.mdl{position:fixed;inset:0;z-index:90}.mdlbg{position:absolute;inset:0;background:rgba(0,0,0,.6)}.mdlc{position:absolute;left:0;right:0;bottom:0;max-height:82vh;overflow:auto;background:var(--card);border-radius:18px 18px 0 0;padding:18px 16px calc(24px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:8px;max-width:460px;margin:0 auto}.mdlclose{position:sticky;top:0;align-self:flex-end;margin-bottom:-36px}
+.calstrip{display:flex;gap:8px;align-items:center;width:100%;text-align:left;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px;color:var(--fg);font:inherit;cursor:pointer}.calm{font-family:Mitr;margin-top:8px;color:var(--go)}.calrow{display:flex;gap:10px;padding:6px 0;border-bottom:1px solid var(--line)}.calrow .cd,.srow .cd{min-width:92px;color:var(--mute);font-size:13px}.calrow.past{opacity:.4}.calrow.job{font-weight:600}
+.seg{display:flex;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:3px}.seg button{flex:1;border:0;background:none;color:var(--mute);font:inherit;padding:8px;border-radius:9px}.seg button.on{background:var(--go);color:var(--ink);font-weight:600}
+.histw{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:#fff}.hist{border-collapse:collapse;color:#111;font-size:13px;min-width:100%}.hist th,.hist td{border:1px solid #bbb;text-align:center;padding:3px 4px;height:26px;min-width:38px}.hist th{background:#f1f1f1;font-weight:600;font-size:12px;line-height:1.1}.hist th small{display:block;font-weight:400;color:#666}.hist th .un{display:block;font-style:normal;font-weight:400;font-size:10px;color:#b00}.hist th.cur{background:#fff3b0}
+.hist .hno{position:sticky;left:0;background:#f7f7f7;min-width:28px;z-index:1}.hist .hnm{position:sticky;left:28px;background:#f7f7f7;text-align:left;min-width:84px;max-width:110px;z-index:1}.hname{background:none;border:0;color:#0645ad;font:inherit;padding:0;text-align:left;text-decoration:underline;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:104px}
+.hist td.ye,.ye.sq{background:#ffff00}.hist td.na,.na.sq{background:#e9e9e9}.sq{display:inline-block;width:12px;height:12px;border:1px solid #999;vertical-align:middle;margin-right:4px}.vA{color:#3DDC97}.vB{color:#6CB4FF}.hist .vA{color:#0a7a4c}.hist .vB{color:#1559b8}
+.mtabs{display:flex;gap:4px;overflow-x:auto;border-top:1px solid var(--line);padding-top:6px}.mtabs button{flex:none;border:1px solid var(--line);background:var(--card);color:var(--mute);border-radius:0 0 10px 10px;padding:6px 12px;font:inherit}.mtabs button.on{background:var(--go);color:var(--ink);font-weight:600;border-color:var(--go)}
+.sgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:6px 0}.sgrid div{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:8px;text-align:center}.sgrid b{display:block;font-size:20px;font-family:Mitr}.sgrid small{color:var(--mute)}.srow{display:flex;gap:10px;align-items:baseline;padding:6px 0;border-bottom:1px solid var(--line);flex-wrap:wrap}.srow .ye{background:#ffff00;color:#111;padding:0 6px;border-radius:4px}.srow .na{color:var(--dim)}
 .plrow.draft .pt{opacity:.5}.plrow.draft .pt::after{content:' (ชื่อร่าง)';font-size:12px}.upl{cursor:pointer;display:inline-flex;align-items:center;justify-content:center}
 .pdfv{display:flex;flex-direction:column;gap:8px}.pdfpg{width:100%;height:auto;background:#fff;border-radius:6px;box-shadow:0 1px 6px rgba(0,0,0,.4)}
 .paperwrap{overflow-x:auto;border-radius:10px}.paper{background:#FBFAF7;color:#1B1B1B;padding:18px 14px;font-family:'Sarabun','TH Sarabun New','IBM Plex Sans Thai',sans-serif;font-size:12px;line-height:1.45;min-width:560px}.paper h4{text-align:center;margin:0 0 2px;font-size:14px}.paper .meta{text-align:center;font-size:11px;margin-bottom:10px;color:#333}.paper table{border-collapse:collapse;width:100%}.paper th,.paper td{border:1px solid #9b9b9b;padding:3px 4px;text-align:center;color:#1B1B1B;background:none}.paper th{background:#eceae4;font-weight:600}.paper td:first-child,.paper th:first-child{text-align:left;white-space:nowrap}.paper .hl{background:#fff4c2;font-weight:700}.paper p{margin:6px 0}.paper .sec{font-weight:700;margin-top:8px}
@@ -166,7 +174,7 @@ function weekMin(){return isOwner()?'':n2d(d2n(S.me.termStart)+(S.me.thisWeek-1)
 function vPin(){dock(null);$('app').innerHTML='<div class="top"><div class="logo">'+LOGO+'Coda</div><span class="sub">จบคาบ จบงาน</span></div>'+
  '<div class="card" style="display:flex;flex-direction:column;gap:12px"><div style="font-family:Mitr;font-size:18px">ใส่ PIN ของคุณครู</div>'+
  '<input class="pin" id="pin" type="password" inputmode="numeric" maxlength="6" autocomplete="off"><div class="err" id="err"></div>'+
- '<button class="btn go" id="enter">เข้าใช้งาน</button></div><div class="hint">PIN เป็นของคุณครูแต่ละท่าน ห้ามส่งต่อ · ครูเป้และครูแทนใช้ลิงก์เดียวกัน · รุ่น 7</div>';
+ '<button class="btn go" id="enter">เข้าใช้งาน</button></div><div class="hint">PIN เป็นของคุณครูแต่ละท่าน ห้ามส่งต่อ · ครูเป้และครูแทนใช้ลิงก์เดียวกัน · รุ่น 8</div>';
  $('enter').onclick=function(){S.pin=$('pin').value.trim();if(!S.pin||S.busy)return;$('enter').textContent='กำลังตรวจ…';
   call('login',[S.pin],function(v){S.me=v;lsSet('coda_pin',S.pin);lsSet('coda_me',JSON.stringify(v));S.w=Math.max(1,v.thisWeek);loadWeek()},function(){$('enter').textContent='เข้าใช้งาน'})};
  $('pin').onkeydown=function(e){if(e.key==='Enter')$('enter').click()};$('pin').focus()}
@@ -207,9 +215,9 @@ function vHome(){S.tab='rooms';var rooms=shownRooms();var st=rooms.map(function(
  $('app').innerHTML=header()+gradeBar()+planCard(false)+
  '<div style="display:flex;justify-content:space-between" class="sub"><span>บันทึกแล้ว '+done+'/'+need+' ห้อง</span><span>'+(isOwner()?'ข้อมูลครูแทนเข้ามาที่นี่ทันที':'แตะห้องที่สอนแทน')+'</span></div><div class="prog"><i style="width:'+(need?Math.round(done/need*100):0)+'%"></i></div>'+
  list+'<div class="err" id="err"></div>'+
- '<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn line sm" id="rf">รีเฟรช</button>'+(S.me.sheetUrl?'<a class="btn line sm" href="'+esc(S.me.sheetUrl)+'" target="_blank">เปิด Google Sheet</a>':'')+'<button class="btn line sm" id="out">ออกจากระบบ</button></div>';
+ '<button class="btn line" id="hist">📋 ประวัติเช็คชื่อ + A/B รายห้อง</button><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn line sm" id="rf">รีเฟรช</button>'+(S.me.sheetUrl?'<a class="btn line sm" href="'+esc(S.me.sheetUrl)+'" target="_blank">เปิด Google Sheet</a>':'')+'<button class="btn line sm" id="out">ออกจากระบบ</button></div>';
  dock(tabs()||null);bindWeek();bindTabs();bindGrade();
- $('rf').onclick=loadWeek;$('out').onclick=function(){if(qGet().length&&!confirm('ยังมีข้อมูลที่ส่งไม่ถึงชีต ออกตอนนี้ข้อมูลนั้นจะหาย ออกเลยไหม?'))return;
+ $('rf').onclick=loadWeek;$('hist').onclick=function(){var r=shownRooms();if(r.length)openHist(r[0])};$('out').onclick=function(){if(qGet().length&&!confirm('ยังมีข้อมูลที่ส่งไม่ถึงชีต ออกตอนนี้ข้อมูลนั้นจะหาย ออกเลยไหม?'))return;
   try{Object.keys(localStorage).filter(function(k){return k.indexOf('coda_')===0}).forEach(function(k){localStorage.removeItem(k)})}catch(e){}
   S={pin:'',me:null,w:1,tab:'today',marks:{},hist:[]};vPin()};updQ();
  each('.room',function(b){b.onclick=function(){var r=b.getAttribute('data-r'),s=roomState(r);openRoom(r,s.date&&s.date<=S.me.today?s.date:S.me.today)}})}
@@ -230,7 +238,7 @@ function vCheck(){var L=S.me.roster[S.room],c=count(),w=weekOf(S.date),p=planFor
   return '<div class="kid '+(m==='x'?'x':m==='B'?'B':'')+'"><button class="nm" data-k="'+s.no+'" title="'+esc(s.name)+'"><i class="dot"></i><span>'+esc(lab)+'</span><span class="no">'+s.no+'</span></button>'+
   (m==='x'?'<div class="xl">ขาด · B</div>':'<div class="ab"><button class="'+(m==='B'?'':'onA')+'" data-l="'+s.no+'" data-v="A">A</button><button class="'+(m==='B'?'onB':'')+'" data-l="'+s.no+'" data-v="B">B</button></div>')+'</div>'}).join('');
  var lates=[[0,'ตรงเวลา'],[5,'ช้า 5'],[10,'ช้า 10'],[15,'ช้า 15'],[20,'ช้า 20+']];
- $('app').innerHTML='<div class="top"><button class="btn line sm" id="back">‹</button><div class="grow"><div style="font-family:Mitr;font-size:20px">ป.'+S.room+'</div><div class="sub" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">สัปดาห์ที่ '+w+(p?' · '+esc(p.title):'')+'</div></div><input type="date" id="d" value="'+S.date+'"'+(weekMin()?' min="'+weekMin()+'"':'')+' max="'+S.me.today+'" style="width:150px;min-height:40px"></div>'+
+ $('app').innerHTML='<div class="top"><button class="btn line sm" id="back">‹</button><div class="grow"><div style="font-family:Mitr;font-size:20px">ป.'+S.room+'</div><div class="sub" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">สัปดาห์ที่ '+w+(p?' · '+esc(p.title):'')+'</div></div><button class="btn line sm" id="hst" aria-label="ประวัติห้องนี้">📋</button><input type="date" id="d" value="'+S.date+'"'+(weekMin()?' min="'+weekMin()+'"':'')+' max="'+S.me.today+'" style="width:150px;min-height:40px"></div>'+
  (off?'<div class="note">วันนี้อยู่ในวันงดสอน: '+esc(off.why)+' — ถ้าสอนจริงก็บันทึกได้</div>':'')+
  (S.prev?'<div class="note">บันทึกล่าสุดโดย '+esc(S.prev.by)+' · '+esc(S.prev.at)+' — กดบันทึกอีกครั้งจะแทนที่ของเดิม</div>':'')+
  '<div class="stats"><div class="stat"><div class="k">มา</div><div class="v">'+c.p+'<span style="font-size:13px;color:var(--mute)">/'+c.n+'</span></div></div><div class="stat"><div class="k">ระดับ A</div><div class="v" style="color:var(--a)">'+c.a+'</div></div><div class="stat"><div class="k">ระดับ B</div><div class="v" style="color:var(--b)">'+c.b+'</div></div></div>'+
@@ -242,7 +250,7 @@ function vCheck(){var L=S.me.roster[S.room],c=count(),w=weekOf(S.date),p=planFor
  '<label class="hint" for="note">ปัญหา / หมายเหตุ (ไม่มีก็เว้นว่าง)</label><textarea id="note" maxlength="300" placeholder="เช่น เด็กเลขที่ 5 ไม่ยอมร้อง / โปรเจกเตอร์เสีย">'+esc(S.note)+'</textarea>'+
  '<div class="err" id="err"></div>';
  dock('<button class="btn go" id="save">บันทึก ป.'+S.room+' · '+thd(S.date)+'</button>');
- $('back').onclick=function(){loadWeek()};$('song').oninput=function(){S.song=this.value};$('note').oninput=function(){S.note=this.value};
+ $('back').onclick=function(){loadWeek()};$('hst').onclick=function(){openHist(S.room)};$('song').oninput=function(){S.song=this.value};$('note').oninput=function(){S.note=this.value};
  $('d').onchange=function(){if(this.value&&this.value<=S.me.today&&this.value>=weekMin())openRoom(S.room,this.value)};
  $('allin').onclick=function(){snap();Object.keys(S.marks).forEach(function(k){if(S.marks[k]==='x')delete S.marks[k]});vCheck()};
  $('allA').onclick=function(){snap();Object.keys(S.marks).forEach(function(k){if(S.marks[k]==='B')delete S.marks[k]});vCheck()};
@@ -468,6 +476,89 @@ function bindPlBulk(){var P=S.pl;
 
 
 /* ---------- วันนี้ ---------- */
+/* ---------- หน้าต่างเล็ก (modal) ---------- */
+function modal(html){var m=$('mdl');if(!m){m=document.createElement('div');m.id='mdl';m.className='mdl';document.body.appendChild(m)}
+ m.innerHTML='<div class="mdlbg" id="mdlx"></div><div class="mdlc"><button class="btn line sm mdlclose" id="mdlc" aria-label="ปิด">✕</button>'+html+'</div>';m.hidden=false;document.body.style.overflow='hidden';
+ $('mdlx').onclick=$('mdlc').onclick=closeModal}
+function closeModal(){var m=$('mdl');if(m){m.hidden=true;m.innerHTML=''}document.body.style.overflow=''}
+
+/* ---------- ปฏิทินโรงเรียน เทอม 2/2569 (งาน = หน้าที่ครูเป้) ---------- */
+var SCHOOL_CAL=[['2026-11-05','','ค่ายลูกเสือ ป.4 · งดเรียน'],['2026-11-16','','ทัศนศึกษา ป.4/1, 4/3'],['2026-11-19','2026-11-20','กีฬาสีประถม (20 งดเรียน)'],
+ ['2026-12-07','','ชดเชยวันพ่อ · หยุด'],['2026-12-10','','วันรัฐธรรมนูญ · หยุด'],['2026-12-16','2026-12-17','สอบกลางภาค (ดนตรีไม่สอบ งดเรียน)'],['2026-12-22','','ส่งเนื้อหาสอบปลายภาค','งาน'],
+ ['2026-12-24','2027-01-01','หยุดปีใหม่'],['2027-01-04','','ส่งข้อสอบปลายภาค','งาน'],['2027-01-08','','วันเด็ก · หยุด'],['2027-01-15','','Career Day (อาจงดเรียน)'],
+ ['2027-01-21','2027-01-22','นัดพบผู้ปกครอง ป.4–6'],['2027-01-25','2027-01-27','ตรวจเอกสารวิชาการ ครั้งที่ 3','งาน'],['2027-02-03','2027-02-04','ซ้อม + Annual Show (4 งดเรียน)'],
+ ['2027-02-09','2027-02-13','นำเสนอ GP ป.4–6'],['2027-02-12','','ตลาดนัด (อาจงดเรียนวันศุกร์)'],['2027-02-20','','แสดงผลงานศิลปะ'],['2027-02-24','2027-02-26','ตรวจเอกสารวิชาการ ครั้งที่ 4','งาน'],
+ ['2027-03-02','2027-03-03','สอบปลายภาค ป.1–5'],['2027-03-04','2027-03-05','สอบซ่อม / ส่งคะแนนให้หัวหน้ากลุ่มสาระ','งาน'],['2027-03-10','','ส่ง ปพ.5-1 ให้หัวหน้ากลุ่มสาระ','งาน'],['2027-03-17','','ส่ง ปพ.5-1 ให้ครูประจำชั้น','งาน']];
+function calWhen(e){return thd(e[0])+(e[1]?'–'+thd(e[1]):'')}
+function calNext(){var t=S.me.today;return SCHOOL_CAL.filter(function(e){return (e[1]||e[0])>=t})[0]||null}
+function calStrip(){var e=calNext();if(!e)return '';var dd=d2n(e[0])-d2n(S.me.today);
+ return '<button class="calstrip" id="calS"><span>📅</span><span class="grow"><b>'+(dd<=0?'วันนี้':dd===1?'พรุ่งนี้':'อีก '+dd+' วัน')+'</b> · '+esc(calWhen(e))+' · '+esc(e[2])+'</span><span class="sub">ปฏิทิน ›</span></button>'}
+function calModal(){var t=S.me.today,cur='',h='<div style="font-family:Mitr;font-size:18px">ปฏิทินโรงเรียน เทอม 2/2569</div><div class="hint">🟡 = งานที่ครูต้องส่ง · จางลง = ผ่านไปแล้ว</div>';
+ SCHOOL_CAL.forEach(function(e){var m=MONF[+e[0].slice(5,7)-1];if(m!==cur){cur=m;h+='<div class="calm">'+m+'</div>'}var past=(e[1]||e[0])<t;
+  h+='<div class="calrow'+(past?' past':'')+(e[3]?' job':'')+'"'+(!past&&e===calNext()?' id="calNow"':'')+'><span class="cd">'+esc(calWhen(e))+'</span><span>'+(e[3]?'🟡 ':'')+esc(e[2])+'</span></div>'});
+ modal(h);var n=$('calNow');if(n)n.scrollIntoView({block:'center'})}
+
+/* ---------- ประวัติเช็คชื่อ + A/B (หน้าตาแบบฟอร์มโรงเรียน) ---------- */
+function classDates(room){var out=[];for(var w=1;w<=PL_WEEKS;w++){var d=roomDate(room,w);if(d&&!offOf(room,d))out.push(d)}return out}
+function openHist(room){S.hr=room;S.hmode=S.hmode||'att';S.H=S.H||{};var td=S.me.today,ds=classDates(room),cm=td.slice(0,7);S.hm=ds.some(function(d){return d.slice(0,7)===cm})?cm:(ds[0]||td).slice(0,7);vHist();
+ rpc('history',[S.pin,room]).then(function(v){S.H[room]=v;if(S.screen==='hist'&&S.hr===room)vHist()},function(e){var m=$('err');if(m)m.textContent=errText(e)})}
+function vHist(){S.screen='hist';var room=S.hr,H=(S.H||{})[room],ds=classDates(room),months=[],td=S.me.today;
+ ds.forEach(function(d){var k=d.slice(0,7);if(months.indexOf(k)<0)months.push(k)});var md=ds.filter(function(d){return d.slice(0,7)===S.hm});
+ var rooms=shownRooms(),mode=S.hmode;
+ var top='<div class="top"><button class="btn line sm" id="hb">‹</button><div class="grow"><div style="font-family:Mitr;font-size:20px">ประวัติ ป.'+room+'</div><div class="sub">เช็คชื่อ + A/B ทั้งเทอม · แตะชื่อดูรายคน</div></div></div>'+
+  '<div class="chips">'+rooms.map(function(r){return '<button class="chip '+(r===room?'on':'')+'" data-hr="'+r+'">'+r+'</button>'}).join('')+'</div>'+
+  '<div class="seg"><button class="'+(mode==='att'?'on':'')+'" data-hm="att">เช็คชื่อ</button><button class="'+(mode==='ab'?'on':'')+'" data-hm="ab">A/B</button></div>';
+ var body;if(!H)body='<div class="hint" style="padding:24px 0;text-align:center">กำลังโหลด…</div>';else{
+  var head='<tr><th class="hno">ที่</th><th class="hnm">ชื่อเล่น</th>'+md.map(function(d){var L=H.log[d];return '<th class="'+(d===td?'cur':'')+'">'+(+d.slice(8))+'<small>'+MON[+d.slice(5,7)-1]+'</small>'+(L?'':'<i class="un">'+(d>td?'รอ':'ยังไม่เช็ค')+'</i>')+'</th>'}).join('')+'</tr>';
+  var rows=H.students.map(function(st){return '<tr><td class="hno">'+st.no+'</td><td class="hnm"><button class="hname" data-hs="'+st.no+'">'+esc(st.nick||st.name)+'</button></td>'+md.map(function(d){var L=H.log[d];if(!L)return '<td class="na"></td>';var m=L.m[st.no];
+   if(m==='x')return '<td class="ye"></td>';return '<td>'+(mode==='att'?'/':'<b class="'+(m==='B'?'vB':'vA')+'">'+(m==='B'?'B':'A')+'</b>')+'</td>'}).join('')+'</tr>'}).join('');
+  body=(md.length?'<div class="histw"><table class="hist"><thead>'+head+'</thead><tbody>'+rows+'</tbody></table></div>':'<div class="hint">เดือนนี้ไม่มีคาบ</div>')+
+  '<div class="legend">'+(mode==='att'?'<span>/ = มา</span>':'<span><b class="vA">A</b> / <b class="vB">B</b></span>')+'<span><i class="ye sq"></i>ขาด</span><span><i class="na sq"></i>ยังไม่เช็ค</span></div>'}
+ var tabsM='<div class="mtabs">'+months.map(function(k){return '<button class="'+(k===S.hm?'on':'')+'" data-mo="'+k+'">'+MONF[+k.slice(5,7)-1]+'</button>'}).join('')+'</div>';
+ $('app').innerHTML=top+body+tabsM+'<div class="err" id="err"></div>'+(H?'<button class="btn line" id="hx">ส่งออกไฟล์ฟอร์มโรงเรียน (Excel) · ป.'+room+'</button><div class="hint">ใส่ / กับช่องเหลืองตามฟอร์ม · A/B ไม่ลงไฟล์</div>':'');
+ dock(tabs());bindTabs();
+ $('hb').onclick=function(){S.screen='week';if(S.tab==='rooms')vHome();else vToday()};
+ each('[data-hr]',function(b){b.onclick=function(){openHist(b.getAttribute('data-hr'))}});
+ each('[data-hm]',function(b){b.onclick=function(){S.hmode=b.getAttribute('data-hm');vHist()}});
+ each('[data-mo]',function(b){b.onclick=function(){S.hm=b.getAttribute('data-mo');vHist()}});
+ each('[data-hs]',function(b){b.onclick=function(){studentModal(room,+b.getAttribute('data-hs'))}});
+ if($('hx'))$('hx').onclick=function(){var b=this;b.disabled=true;b.textContent='กำลังสร้างไฟล์…';exportAtt(room).then(function(){b.disabled=false;b.textContent='ส่งออกไฟล์ฟอร์มโรงเรียน (Excel) · ป.'+room},function(e){b.disabled=false;b.textContent='ลองอีกครั้ง';var m=$('err');if(m)m.textContent='สร้างไฟล์ไม่สำเร็จ: '+(e&&e.message||e)})}}
+function studentModal(room,no){var H=S.H[room],st=H.students.filter(function(x){return x.no===no})[0],td=S.me.today;if(!st)return;
+ var ds=classDates(room).filter(function(d){return d<=td}),a=0,b=0,x=0,n=0,list='';
+ ds.forEach(function(d){var L=H.log[d],m=L?L.m[no]:null,t,c;if(!L){t='ยังไม่เช็ค';c='na'}else{n++;if(m==='x'){x++;t='ขาด';c='ye'}else if(m==='B'){b++;t='มา · B';c='vB'}else{a++;t='มา · A';c='vA'}}
+  list='<div class="srow"><span class="cd">'+DAYS[dow(d)]+' '+thd(d)+'</span><span class="'+c+'">'+t+'</span>'+(L&&L.song?'<span class="sub">'+esc(L.song)+'</span>':'')+'</div>'+list});
+ modal('<div style="font-family:Mitr;font-size:18px">'+esc(st.nick||'')+' · เลขที่ '+st.no+'</div><div class="sub">'+esc(st.name)+' · ป.'+room+'</div>'+
+  '<div class="sgrid"><div><b>'+(n-x)+'/'+n+'</b><small>มาเรียน</small></div><div><b class="vA">'+a+'</b><small>A</small></div><div><b class="vB">'+b+'</b><small>B</small></div><div><b style="color:var(--x)">'+x+'</b><small>ขาด</small></div></div>'+
+  (list||'<div class="hint">ยังไม่มีคาบที่เช็ค</div>'))}
+/* ส่งออกไฟล์ฟอร์มโรงเรียน: เติมแม่แบบ form_attendance.xlsx (แท็บเดือน ต.ค.–มี.ค.) */
+var MONEN={'10':'October','11':'November','12':'December','01':'January','02':'February','03':'March'};
+function exportAtt(room){var H=S.H[room],ds=classDates(room),bym={};ds.forEach(function(d){(bym[MONEN[d.slice(5,7)]]=bym[MONEN[d.slice(5,7)]]||[]).push(d)});
+ if(typeof JSZip==='undefined')return Promise.reject(new Error('โหลดตัวสร้างไฟล์ไม่สำเร็จ ลองรีเฟรช'));
+ return fetch('form_attendance.xlsx?v=1').then(function(r){if(!r.ok)throw new Error('โหลดแม่แบบไม่ได้');return r.arrayBuffer()}).then(function(buf){return JSZip.loadAsync(buf)}).then(function(z){
+  var P=new DOMParser(),X=new XMLSerializer(),NS='http://schemas.openxmlformats.org/spreadsheetml/2006/main',RNS='http://schemas.openxmlformats.org/officeDocument/2006/relationships';
+  return Promise.all([z.file('xl/workbook.xml').async('string'),z.file('xl/_rels/workbook.xml.rels').async('string'),z.file('[Content_Types].xml').async('string')]).then(function(a){
+   var wb=P.parseFromString(a[0],'application/xml'),rel=P.parseFromString(a[1],'application/xml'),ct=a[2],jobs=[];
+   var rmap={};[].slice.call(rel.getElementsByTagName('Relationship')).forEach(function(r){rmap[r.getAttribute('Id')]=r});
+   [].slice.call(wb.getElementsByTagName('sheet')).forEach(function(sh){var name=sh.getAttribute('name'),rid=sh.getAttributeNS(RNS,'id')||sh.getAttribute('r:id'),R=rmap[rid],path=R.getAttribute('Target').replace(/^\//,'');if(path.indexOf('xl/')!==0)path='xl/'+path;
+    if(!(name in bym)&&Object.keys(MONEN).some(function(k){return MONEN[k]===name})){sh.parentNode.removeChild(sh);R.parentNode.removeChild(R);ct=ct.replace(new RegExp('<Override PartName="/'+path.replace(/[.]/g,'\\.')+'"[^>]*/>'),'');z.remove(path);return}
+    if(bym[name])jobs.push(z.file(path).async('string').then(function(x){z.file(path,fillMonth(P,X,NS,x,room,H,bym[name]))}))});
+   var bv=wb.getElementsByTagName('workbookView')[0];if(bv)bv.setAttribute('activeTab','0');
+   return Promise.all(jobs).then(function(){z.file('xl/workbook.xml',X.serializeToString(wb));z.file('xl/_rels/workbook.xml.rels',X.serializeToString(rel));z.file('[Content_Types].xml',ct);return z.generateAsync({type:'blob',mimeType:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'})})})
+ }).then(function(blob){var name='บันทึกการส่งงานดนตรี ป.'+room.replace('/','-')+'.xlsx',f;try{f=new File([blob],name,{type:blob.type})}catch(e){}
+  if(f&&navigator.canShare&&navigator.canShare({files:[f]})){return navigator.share({files:[f],title:name})["catch"](function(){})}
+  var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove()},4000)})}
+function fillMonth(P,X,NS,xml,room,H,dates){var doc=P.parseFromString(xml,'application/xml'),cells={};[].slice.call(doc.getElementsByTagNameNS(NS,'c')).forEach(function(c){cells[c.getAttribute('r')]=c});
+ var col=function(i){return String.fromCharCode(65+i)};var yS=cells.Z1?cells.Z1.getAttribute('s'):null;if(cells.Z1)cells.Z1.parentNode.removeChild(cells.Z1);
+ var clear=function(c){while(c.firstChild)c.removeChild(c.firstChild)};
+ var set=function(ref,v,style){var c=cells[ref];if(!c)return;clear(c);if(style!=null)c.setAttribute('s',style);if(v===''||v==null){c.removeAttribute('t');return}
+  if(typeof v==='number'){c.setAttribute('t','n');var e=doc.createElementNS(NS,'v');e.textContent=String(v);c.appendChild(e)}else{c.setAttribute('t','inlineStr');var is=doc.createElementNS(NS,'is'),t=doc.createElementNS(NS,'t');t.textContent=v;is.appendChild(t);c.appendChild(is)}};
+ set('B2','ป.'+room);
+ dates.forEach(function(d,i){var p=d.split('-');set(col(6+i)+'5',(Date.UTC(+p[0]+543,+p[1]-1,+p[2])-Date.UTC(1899,11,30))/864e5);set(col(6+i)+'7','เช็คชื่อ')});
+ H.students.forEach(function(st,i){var r=8+i,nm=String(st.name).trim(),m=nm.match(/^(เด็กชาย|เด็กหญิง|ด\.ช\.|ด\.ญ\.|นางสาว|นาย|นาง)\s*/),pre=m?m[1]:'',rest=(m?nm.slice(m[0].length):nm).trim().split(/\s+/);
+  set('A'+r,st.no);set('B'+r,/^\d+$/.test(st.id)?+st.id:st.id);set('C'+r,pre);set('D'+r,rest[0]||'');set('E'+r,rest.slice(1).join(' '));set('F'+r,st.nick||'');
+  dates.forEach(function(d,j){var L=H.log[d];if(!L)return;var ref=col(6+j)+r;if(L.m[st.no]==='x')set(ref,'',yS);else set(ref,'/')})});
+ return X.serializeToString(doc)}
+
 var PERIODS=[['08.40','09.30'],['09.30','10.20'],['10.20','11.10'],['11.10','12.00'],['12.00','12.50'],['12.50','13.40'],['13.40','14.30'],['14.30','15.20']];
 var PE_EVENTS={1:[['เช้า','07.30–08.40','ซ้อมวงสตริง ม.1']],2:[[5,'','ซ้อมวงสตริงรวมประถมปลาย']],3:[['เช้า','07.30–08.40','ซ้อมวงสตริง ม.1']],4:[['เช้า','07.30–08.40','ซ้อมวงสตริงรวมประถมปลาย'],[3,'','ประชุมกลุ่มสาระศิลปะ'],[5,'','ซ้อมวงสตริง ป.6/2']],5:[['เช้า','07.30–08.40','ซ้อมวงสตริงรวมประถมปลาย'],[5,'','ซ้อมวงสตริง ป.6/6']]};
 function nowMin(){var d=new Date();return d.getHours()*60+d.getMinutes()}
@@ -489,9 +580,9 @@ function vToday(){S.tab='today';S.screen='week';var me=S.me,today=me.today,dw=do
  var job=(S.news&&S.news.items||[]).filter(function(i){return i.type==='งาน'&&i.mine&&i.done.indexOf(me.name)<0&&i.due&&d2n(i.due)>=d2n(today)&&d2n(i.due)-d2n(today)<=3}).sort(function(a,b){return a.due.localeCompare(b.due)})[0];
  if(job){var dd=d2n(job.due)-d2n(today);alerts+='<div class="alertc" id="aJob"><b>'+(dd||'วันนี้')+'</b><div><div style="font-weight:600">'+(dd?'วัน · ':'')+esc(job.title)+'</div><div class="hint">งานจากไลน์</div></div></div>'}
  $('app').innerHTML='<div class="top"><div class="logo grow">'+LOGO+'Coda</div><span class="sub" style="font-family:\'JetBrains Mono\'">'+DAYS[dw]+' '+thd(today)+'</span><button class="btn line sm" id="goT" aria-label="ภาพรวมเทอม" style="padding:0 10px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.5"/></svg></button></div>'+alerts+
- '<div class="rowb"><div class="lbl">วันนี้ของ'+esc(me.name)+'</div><div class="sub">เช็คแล้ว '+nDone+'/'+(rooms.length-nOff)+(nLate?' · ค้าง '+nLate:'')+(nOff?' · งด '+nOff:'')+'</div></div>'+
+ calStrip()+'<div class="rowb"><div class="lbl">วันนี้ของ'+esc(me.name)+'</div><div class="sub">เช็คแล้ว '+nDone+'/'+(rooms.length-nOff)+(nLate?' · ค้าง '+nLate:'')+(nOff?' · งด '+nOff:'')+'</div></div>'+
  (rows.length?rows.join(''):'<div class="hint" style="text-align:center;padding:32px 0">วันนี้ไม่มีคาบ</div>')+'<div class="err" id="err"></div>';
- dock(tabs());bindTabs();$('goT').onclick=function(){vTerm()};each('[data-tr]',function(b){b.onclick=function(){openRoom(b.getAttribute('data-tr'),today)}});
+ dock(tabs());bindTabs();$('goT').onclick=function(){vTerm()};if($('calS'))$('calS').onclick=calModal;each('[data-tr]',function(b){b.onclick=function(){openRoom(b.getAttribute('data-tr'),today)}});
  if($('aJob'))$('aJob').onclick=function(){vNews();fetchNews()}}
 
 /* ---------- ภาพรวมเทอม ---------- */
