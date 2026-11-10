@@ -84,6 +84,7 @@ td.A{color:var(--a);font-family:'JetBrains Mono';font-weight:700}td.B{color:var(
 .checks{display:flex;flex-direction:column;gap:7px;font-size:14px}.checks div{display:flex;gap:8px;align-items:flex-start}.checks i{color:var(--go);font-style:normal;font-weight:700}
 .fl{display:flex;gap:8px}.fl>*{flex:1}.ftag{border-radius:12px;min-height:44px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;text-align:center;padding:0 6px}.ftag.send{background:var(--fg);color:var(--bg)}.ftag.keep{border:1px solid var(--line);color:var(--mute);background:none}.ftag.wait{border:1px dashed var(--dim);color:var(--dim)}
 .seg{display:grid;grid-template-columns:1fr 1fr;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:3px}.seg button{min-height:38px;border-radius:9px;font-size:14px;color:var(--mute)}.seg button.on{background:var(--fg);color:var(--bg);font-weight:600}
+.plrow.draft .pt{opacity:.5}.plrow.draft .pt::after{content:' (ชื่อร่าง)';font-size:12px}.upl{cursor:pointer;display:inline-flex;align-items:center;justify-content:center}
 .pdfv{display:flex;flex-direction:column;gap:8px}.pdfpg{width:100%;height:auto;background:#fff;border-radius:6px;box-shadow:0 1px 6px rgba(0,0,0,.4)}
 .paperwrap{overflow-x:auto;border-radius:10px}.paper{background:#FBFAF7;color:#1B1B1B;padding:18px 14px;font-family:'Sarabun','TH Sarabun New','IBM Plex Sans Thai',sans-serif;font-size:12px;line-height:1.45;min-width:560px}.paper h4{text-align:center;margin:0 0 2px;font-size:14px}.paper .meta{text-align:center;font-size:11px;margin-bottom:10px;color:#333}.paper table{border-collapse:collapse;width:100%}.paper th,.paper td{border:1px solid #9b9b9b;padding:3px 4px;text-align:center;color:#1B1B1B;background:none}.paper th{background:#eceae4;font-weight:600}.paper td:first-child,.paper th:first-child{text-align:left;white-space:nowrap}.paper .hl{background:#fff4c2;font-weight:700}.paper p{margin:6px 0}.paper .sec{font-weight:700;margin-top:8px}
 
@@ -165,7 +166,7 @@ function weekMin(){return isOwner()?'':n2d(d2n(S.me.termStart)+(S.me.thisWeek-1)
 function vPin(){dock(null);$('app').innerHTML='<div class="top"><div class="logo">'+LOGO+'Coda</div><span class="sub">จบคาบ จบงาน</span></div>'+
  '<div class="card" style="display:flex;flex-direction:column;gap:12px"><div style="font-family:Mitr;font-size:18px">ใส่ PIN ของคุณครู</div>'+
  '<input class="pin" id="pin" type="password" inputmode="numeric" maxlength="6" autocomplete="off"><div class="err" id="err"></div>'+
- '<button class="btn go" id="enter">เข้าใช้งาน</button></div><div class="hint">PIN เป็นของคุณครูแต่ละท่าน ห้ามส่งต่อ · ครูเป้และครูแทนใช้ลิงก์เดียวกัน · รุ่น 6</div>';
+ '<button class="btn go" id="enter">เข้าใช้งาน</button></div><div class="hint">PIN เป็นของคุณครูแต่ละท่าน ห้ามส่งต่อ · ครูเป้และครูแทนใช้ลิงก์เดียวกัน · รุ่น 7</div>';
  $('enter').onclick=function(){S.pin=$('pin').value.trim();if(!S.pin||S.busy)return;$('enter').textContent='กำลังตรวจ…';
   call('login',[S.pin],function(v){S.me=v;lsSet('coda_pin',S.pin);lsSet('coda_me',JSON.stringify(v));S.w=Math.max(1,v.thisWeek);loadWeek()},function(){$('enter').textContent='เข้าใช้งาน'})};
  $('pin').onkeydown=function(e){if(e.key==='Enter')$('enter').click()};$('pin').focus()}
@@ -395,9 +396,27 @@ function plField(k,lab,area){var f=S.pl.form,v=f[k];if(Array.isArray(v))v=v.join
  return '<label class="hint" for="pf_'+k+'">'+lab+(empty?' <span style="color:var(--x)">อ่านไม่พบ กรอกเอง</span>':'')+'</label>'+(area?'<textarea id="pf_'+k+'" data-pf="'+k+'" rows="'+Math.min(6,Math.max(2,String(v).split('\n').length+1))+'"'+st+'>'+esc(v)+'</textarea>':'<input type="text" id="pf_'+k+'" data-pf="'+k+'" value="'+esc(v)+'"'+st+'>')}
 function plRows(){var P=S.pl;if(!P.list)return '<div class="hint">กำลังโหลด…</div>';
  var byW={};(P.list||[]).filter(function(x){return x.grade===P.grade}).forEach(function(x){byW[x.week]=x});
-var rows='';for(var w=1;w<=PL_WEEKS;w++){var x=byW[w],old=planG(w,P.grade);rows+='<div class="card" style="gap:4px"><div style="display:flex;justify-content:space-between;gap:8px;align-items:center"><div class="grow"><b>ส.'+w+'</b> '+esc(x?x.title:old?old.title:'')+'<div class="sub">'+(x?'อัปโหลดโดย '+esc(x.by)+' · '+esc(x.at)+(x.old?' · รุ่นเก่า '+x.old:''):old?'แผนเดิมในระบบ ยังไม่มีไฟล์':'<span style="color:var(--go)">ยังไม่มีแผน</span>')+'</div></div>'+(x&&x.hasFile?'<button class="btn line sm" data-pd="'+w+'">โหลด</button>':'')+'</div></div>'}
+var can=upGrades().indexOf(P.grade)>=0,rows='';for(var w=1;w<=PL_WEEKS;w++){var x=byW[w],old=planG(w,P.grade),has=!!(x&&x.hasFile),st=(P.st||{})[P.grade+'|'+w];
+  rows+='<div class="card plrow'+(has?'':' draft')+'" style="gap:4px"><div style="display:flex;justify-content:space-between;gap:8px;align-items:center"><div class="grow"><b>'+(has?'✅':'⚪')+' ส.'+w+'</b> <span class="pt">'+esc(x?x.title:old?old.title:'')+'</span><div class="sub">'+
+  (st?'<span style="color:var(--go)">'+esc(st)+'</span>':has?'อัปโหลดโดย '+esc(x.by)+' · '+esc(x.at)+(x.old?' · รุ่นเก่า '+x.old:''):old?'ชื่อร่าง · ยังไม่มีไฟล์':'ยังไม่มีแผน')+'</div></div>'+
+  (has?'<button class="btn line sm" data-pd="'+w+'">โหลด</button>':'')+(can?'<label class="btn '+(has?'line':'go')+' sm upl">'+(has?'เปลี่ยนไฟล์':'อัปโหลด')+'<input type="file" hidden data-pu="'+w+'" accept=".docx"></label>':'')+'</div></div>'}
  return rows}
-function bindPlL(){var P=S.pl;
+/* อ่านไฟล์ Word → ข้อมูลแผน (+ สัปดาห์จากชื่อไฟล์) */
+function readPlanFile(file){return new Promise(function(ok,no){
+ if(typeof JSZip==='undefined')return no(new Error('โหลดตัวอ่านไฟล์ไม่สำเร็จ ลองรีเฟรช'));
+ if(!/\.docx$/i.test(file.name))return no(new Error(/\.doc$/i.test(file.name)?'ไฟล์ .doc ต้อง Save As เป็น .docx ก่อน':'รับเฉพาะไฟล์ .docx'));
+ if(file.size>10485760)return no(new Error('ไฟล์ใหญ่เกิน 10 MB'));
+ var r=new FileReader();r.onerror=function(){no(new Error('อ่านไฟล์ไม่ได้'))};r.onload=function(){JSZip.loadAsync(r.result).then(function(z){var d=z.file('word/document.xml');if(!d)throw 0;return d.async('string')}).then(function(xml){var f=parsePlanXml(xml),m=file.name.match(/สัปดาห์(?:ที่)?\s*(\d+)|(?:^|[^ก-๙a-z])ส\.?\s*(\d+)|week\s*(\d+)/i);
+  f.nameWeek=m?(m[1]||m[2]||m[3]):'';f.fileName=file.name;f.b64=bufB64(r.result);ok(f)},function(){no(new Error('อ่านไฟล์ไม่ได้ ต้องเป็นไฟล์ Word .docx'))})};r.readAsArrayBuffer(file)})}
+function plMeta(f){var ln=function(v){return (Array.isArray(v)?v:String(v||'').split('\n')).map(function(x){return String(x).trim()}).filter(String)};
+ return {grade:f.grade,week:parseInt(f.week,10),planNo:String(f.planNo||'').trim(),unit:String(f.unit||'').trim(),title:String(f.title||'').trim(),dates:String(f.dates||'').trim(),obj:ln(f.obj),nav:ln(f.nav),comp:ln(f.comp),attr:ln(f.attr),tool:String(f.tool||'').trim(),media:ln(f.media)}}
+function plHas(g,w){return (S.pl.list||[]).some(function(x){return x.grade===g&&x.week===w&&x.hasFile})}
+function plSaveAll(items,done){var P=S.pl,i=0,fails=[];S.busy=true;
+ var next=function(){if(i>=items.length){S.busy=false;P.bulk=null;done(fails);return}var f=items[i++],k=f.grade+'|'+f.week;P.st=P.st||{};P.st[k]='กำลังเก็บ… ('+i+'/'+items.length+')';vPlans();
+  rpc('planSave',[S.pin,plMeta(f),f.b64,f.fileName]).then(function(v){S.me.plans=v.plans;lsSet('coda_me',JSON.stringify(S.me));P.list=v.list;P.st[k]='เก็บแล้ว ✓ '+f.fileName;next()},function(e){P.st[k]='ไม่สำเร็จ: '+errText(e);fails.push(f.fileName);next()})};
+ next()}
+function plWeekOf(f){var a=parseInt(f.week,10),b=parseInt(f.nameWeek,10);if(a&&b&&a!==b)return {w:0,why:'ในไฟล์เขียน ส.'+a+' แต่ชื่อไฟล์เป็น ส.'+b};var w=a||b;return w>=1&&w<=PL_WEEKS?{w:w}:{w:0,why:'หาสัปดาห์ไม่เจอ'}}
+function bindPlL(){var P=S.pl;bindPlBulk();
  each('[data-pd]',function(b){b.onclick=function(){if(S.busy)return;b.textContent='…';call('planFile',[S.pin,P.grade,+b.getAttribute('data-pd')],function(v){b.textContent='โหลด';var a=document.createElement('a');a.href=URL.createObjectURL(new Blob([b64ToBuf(v.b64)],{type:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'}));a.download=v.name;document.body.appendChild(a);a.click();a.remove()},function(){b.textContent='โหลด'})}});}
 function vPlans(){S.tab='plans';S.screen='plans';var P=plState(),top='<div class="top"><div class="logo grow">'+LOGO+'Coda</div><span class="tag own">'+esc(S.me.role)+'</span><span class="sub">'+esc(S.me.name)+'</span></div>';
  if(P.form){var f=P.form,gs=upGrades();
@@ -415,15 +434,38 @@ function vPlans(){S.tab='plans';S.screen='plans';var P=plState(),top='<div class
    var meta={grade:f.grade,week:w,planNo:String(f.planNo).trim(),unit:String(f.unit).trim(),title:String(f.title).trim(),dates:String(f.dates).trim(),obj:ln(f.obj),nav:ln(f.nav),comp:ln(f.comp),attr:ln(f.attr),tool:String(f.tool).trim(),media:ln(f.media)};
    if(S.busy)return;var b=this;b.textContent='กำลังเก็บ…';call('planSave',[S.pin,meta,f.b64,f.fileName],function(v){S.me.plans=v.plans;lsSet('coda_me',JSON.stringify(S.me));P.list=v.list;P.grade=f.grade;P.form=null;vPlans()},function(){b.textContent='ลองอีกครั้ง'})};
   return}
- $('app').innerHTML=top+'<div class="card" style="display:flex;flex-direction:column;gap:8px"><div style="font-family:Mitr;font-size:17px">อัปโหลดแผนการสอน</div><div class="hint">รับไฟล์ Word (.docx) · ถ้าเป็น .doc ให้ Save As ก่อน · แอปอ่านให้แล้วตรวจก่อนยืนยัน</div><input type="file" id="pF" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"><div class="err" id="err"></div></div>'+
- '<div style="font-family:Mitr;font-size:17px;margin-top:6px">คลังแผน</div><div class="chips">'+['4','5','6'].map(function(g){return '<button class="chip '+(P.grade===g?'on':'')+'" data-pl="'+g+'">ป.'+g+'</button>'}).join('')+'</div>'+'<div id="plL" style="display:flex;flex-direction:column;gap:8px">'+plRows()+'</div>';
+ $('app').innerHTML=top+(upGrades().indexOf(P.grade)>=0?'<div class="card" style="display:flex;flex-direction:column;gap:8px"><label class="btn go upl">อัปโหลดแผนทั้งชุด · ป.'+P.grade+'<input type="file" hidden id="pF" multiple accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"></label><div class="hint">เลือกไฟล์ Word ได้หลายไฟล์พร้อมกัน แอปดูเลขสัปดาห์จากในไฟล์หรือชื่อไฟล์ แล้วลงแถวให้เอง · ไฟล์ .doc ให้ Save As เป็น .docx ก่อน</div>'+plBulkHtml()+'<div class="err" id="err"></div></div>':'<div class="card hint">เอกสาร ป.'+P.grade+' '+(P.grade==='4'?'ครูเป้':'พี่ริท')+'เป็นผู้ดูแล · ดูและโหลดได้อย่างเดียว</div>')+
+ '<div style="font-family:Mitr;font-size:17px;margin-top:6px">คลังแผน</div><div class="hint">✅ มีไฟล์ · ⚪ ชื่อร่าง ยังไม่มีไฟล์ · เปลี่ยนไฟล์ได้ตลอด ระบบใช้ชื่อจากไฟล์ล่าสุด</div><div class="chips">'+['4','5','6'].map(function(g){return '<button class="chip '+(P.grade===g?'on':'')+'" data-pl="'+g+'">ป.'+g+'</button>'}).join('')+'</div>'+'<div id="plL" style="display:flex;flex-direction:column;gap:8px">'+plRows()+'</div>';
  dock(tabs());bindTabs();
  var showL=function(){var L=$('plL');if(L&&!P.form){L.innerHTML=plRows();bindPlL()}};
  if(!P.list)rpc('planList',[S.pin]).then(function(v){P.list=v;showL()},function(e){var m=$('err');if(m)m.textContent=errText(e);P.list=[];showL()});
  each('[data-pl]',function(b){b.onclick=function(){P.grade=b.getAttribute('data-pl');vPlans()}});
  bindPlL();
- $('pF').onchange=function(){var file=this.files[0],e=$('err');if(!file)return;if(!/\.docx$/i.test(file.name)){e.textContent=/\.doc$/i.test(file.name)?'ไฟล์ .doc ต้อง Save As เป็น .docx ก่อน':'รับเฉพาะไฟล์ .docx';return}if(file.size>10485760){e.textContent='ไฟล์ใหญ่เกิน 10 MB';return}
-  e.textContent='กำลังอ่าน…';var r=new FileReader();r.onload=function(){JSZip.loadAsync(r.result).then(function(z){var d=z.file('word/document.xml');if(!d)throw new Error('x');return d.async('string')}).then(function(xml){var f=parsePlanXml(xml);f.fileName=file.name;f.b64=bufB64(r.result);if(upGrades().indexOf(f.grade)<0)f.grade=upGrades()[0];P.form=f;vPlans()},function(){var m=$('err');if(m)m.textContent='อ่านไฟล์ไม่ได้ ต้องเป็นไฟล์ Word .docx'})};r.readAsArrayBuffer(file)}}
+ if($('pF'))$('pF').onchange=function(){var fs=[].slice.call(this.files||[]),e=$('err');if(!fs.length||S.busy)return;e.textContent='กำลังอ่าน '+fs.length+' ไฟล์…';
+  Promise.all(fs.map(function(f){return readPlanFile(f).then(function(x){return x},function(err){return {fileName:f.name,bad:err.message}})})).then(function(list){plBulkStart(list)})};
+ bindPlBulk()}
+function plBulkStart(list){var P=S.pl,g=P.grade,cnt={};
+ list.forEach(function(f){if(f.bad)return;f.grade=g;var r=plWeekOf(f);f.week=r.w||'';f.why=r.why||'';if(f.week)cnt[f.week]=(cnt[f.week]||0)+1});
+ list.forEach(function(f){if(!f.bad&&f.week&&cnt[f.week]>1)f.why='มีหลายไฟล์เป็น ส.'+f.week;if(!f.bad&&f.week&&!f.why&&!String(f.title||'').trim())f.why='อ่านชื่อเรื่องไม่เจอ'});
+ var ok=list.filter(function(f){return !f.bad&&f.week&&!f.why}),over=ok.filter(function(f){return plHas(g,+f.week)});
+ if(ok.length===list.length&&!over.length){plSaveAll(ok,plDone);return}
+ P.bulk=list;vPlans()}
+function plDone(fails){vPlans();var e=$('err');if(e)e.textContent=fails.length?'ไม่สำเร็จ '+fails.length+' ไฟล์ ลองใหม่เฉพาะไฟล์นั้น':''}
+function plBulkHtml(){var P=S.pl,L=P.bulk;if(!L)return '';var g=P.grade;
+ return '<div class="card" style="gap:6px;border-color:var(--go)"><b>ตรวจก่อนเก็บ '+L.length+' ไฟล์</b>'+L.map(function(f,i){var tag=f.bad?'<span style="color:var(--x)">'+esc(f.bad)+'</span>':f.why?'<span style="color:var(--x)">'+esc(f.why)+'</span> → <select data-bw="'+i+'"><option value="">ข้าม</option>'+Array.apply(null,{length:PL_WEEKS}).map(function(_,k){return '<option value="'+(k+1)+'"'+(+f.week===k+1?' selected':'')+'>ส.'+(k+1)+'</option>'}).join('')+'</select>':'ส.'+f.week+(plHas(g,+f.week)?' · <span style="color:var(--go)">ทับไฟล์เดิม</span>':' · ใหม่');
+  return '<div class="sub" style="display:flex;flex-direction:column"><span>📄 '+esc(f.fileName)+'</span><span>'+tag+'</span></div>'}).join('')+
+  '<button class="btn go" id="pB">ยืนยันเก็บ</button><button class="btn line sm" id="pBx">ยกเลิก</button></div>'}
+function bindPlBulk(){var P=S.pl;
+ each('[data-bw]',function(sel){sel.onchange=function(){var f=P.bulk[+sel.getAttribute('data-bw')];f.week=sel.value}});
+ if($('pBx'))$('pBx').onclick=function(){P.bulk=null;vPlans()};
+ if($('pB'))$('pB').onclick=function(){if(S.busy)return;var e=$('err'),L=P.bulk.filter(function(f){return !f.bad&&f.week}),dup={};
+  for(var i=0;i<L.length;i++){if(dup[L[i].week]){e.textContent='ส.'+L[i].week+' เลือกซ้ำ 2 ไฟล์';return}dup[L[i].week]=1;if(!String(L[i].title||'').trim())L[i].title=L[i].fileName.replace(/\.docx$/i,'')}
+  if(!L.length){P.bulk=null;vPlans();return}plSaveAll(L,plDone)};
+ each('[data-pu]',function(inp){inp.onchange=function(){var file=this.files[0],w=+inp.getAttribute('data-pu');if(!file||S.busy)return;var k=P.grade+'|'+w;P.st=P.st||{};P.st[k]='กำลังอ่าน…';vPlans();
+  readPlanFile(file).then(function(f){f.grade=P.grade;var r=plWeekOf(f);
+   if(r.w&&r.w!==w&&!confirm('ไฟล์นี้เขียนว่าเป็น ส.'+r.w+' แต่กำลังใส่ช่อง ส.'+w+'\nใส่ช่อง ส.'+w+' ต่อไหม?')){delete P.st[k];vPlans();return}
+   f.week=w;if(!String(f.title||'').trim())f.title=file.name.replace(/\.docx$/i,'');plSaveAll([f],plDone)},function(err){P.st[k]=err.message;vPlans()})}})}
+
 
 /* ---------- วันนี้ ---------- */
 var PERIODS=[['08.40','09.30'],['09.30','10.20'],['10.20','11.10'],['11.10','12.00'],['12.00','12.50'],['12.50','13.40'],['13.40','14.30'],['14.30','15.20']];
